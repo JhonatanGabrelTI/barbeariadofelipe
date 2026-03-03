@@ -1,0 +1,73 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
+import type { Agendamento } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+
+export function useAgendamentos() {
+    const { user } = useAuth()
+    const queryClient = useQueryClient()
+
+    const agendamentosQuery = useQuery({
+        queryKey: ['agendamentos', user?.id],
+        queryFn: async () => {
+            if (!user) return []
+            const { data, error } = await supabase
+                .from('agendamentos')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('data_hora', { ascending: true })
+            if (error) throw error
+            return data as Agendamento[]
+        },
+        enabled: !!user,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    })
+
+    const createAgendamento = useMutation({
+        mutationFn: async (data: {
+            whatsapp: string
+            servico: string
+            data_hora: string
+            nome_cliente?: string
+        }) => {
+            const { data: result, error } = await supabase
+                .from('agendamentos')
+                .insert({
+                    user_id: user?.id || null,
+                    nome_cliente: data.nome_cliente || user?.user_metadata?.full_name || null,
+                    whatsapp: data.whatsapp,
+                    servico: data.servico,
+                    data_hora: data.data_hora,
+                    status: 'confirmado',
+                })
+                .select()
+                .single()
+            if (error) throw error
+            return result as Agendamento
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['agendamentos', user?.id] })
+        },
+    })
+
+    const cancelAgendamento = useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase
+                .from('agendamentos')
+                .update({ status: 'cancelado' })
+                .eq('id', id)
+            if (error) throw error
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['agendamentos', user?.id] })
+        },
+    })
+
+    return {
+        agendamentos: agendamentosQuery.data ?? [],
+        isLoading: agendamentosQuery.isLoading,
+        error: agendamentosQuery.error,
+        createAgendamento,
+        cancelAgendamento,
+    }
+}
