@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ControleHorarios } from '@/components/ControleHorarios'
 import { WhatsAppConfig } from '@/components/WhatsAppConfig'
 import { GerenciarProdutos } from '@/components/GerenciarProdutos'
+import { Financeiro } from '@/components/Financeiro'
 import { toast } from 'sonner'
 import { format, isToday, isTomorrow, isPast, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -41,7 +42,7 @@ const servicePrices: Record<string, number> = {
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
-type Tab = 'agendamentos' | 'horarios' | 'config' | 'produtos'
+type Tab = 'agendamentos' | 'horarios' | 'config' | 'produtos' | 'financeiro'
 
 export function Painel() {
     const { user, loading: authLoading, signInWithEmail, signInWithPassword, signOut } = useAuth()
@@ -404,6 +405,18 @@ export function Painel() {
                         <Package className="w-4 h-4" />
                         Produtos
                     </button>
+                    <button
+                        onClick={() => setActiveTab('financeiro')}
+                        className={[
+                            'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300',
+                            activeTab === 'financeiro'
+                                ? 'bg-white text-gray-800 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        ].join(' ')}
+                    >
+                        <DollarSign className="w-4 h-4" />
+                        Financeiro
+                    </button>
                 </div>
 
                 {/* Tab Content */}
@@ -413,6 +426,8 @@ export function Painel() {
                     <WhatsAppConfig />
                 ) : activeTab === 'produtos' ? (
                     <GerenciarProdutos />
+                ) : activeTab === 'financeiro' ? (
+                    <Financeiro allAgendamentos={allAgendamentos} />
                 ) : (
                     <>
                         {/* Filters */}
