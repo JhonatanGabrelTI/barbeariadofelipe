@@ -15,7 +15,7 @@ export function useAgendamentosPublic(date?: string) {
 
             const { data, error } = await supabase
                 .from('agendamentos')
-                .select('data_hora, servico, status')
+                .select('data_hora, servico, status, duracao_minutos')
                 .gte('data_hora', startOfDay)
                 .lte('data_hora', endOfDay)
                 .neq('status', 'cancelado') // Don't block slots from cancelled bookings

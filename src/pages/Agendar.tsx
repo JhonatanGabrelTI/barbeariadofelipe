@@ -15,7 +15,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { format, addDays, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
+import { format, addDays, addMinutes, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail } from 'lucide-react'
 
@@ -111,6 +111,7 @@ export function Agendar() {
                 nome_cliente: nomeCliente || undefined,
                 servico: service?.name || '',
                 data_hora: dateTime.toISOString(),
+                duracao_minutos: service?.duration || 30,
             })
             toast.success('✅ Agendamento realizado!', {
                 description: 'Confirme seu horário no WhatsApp abaixo.',
@@ -134,18 +135,13 @@ export function Agendar() {
         }
     }, [selectedDate, selectedTime, selectedService, whatsapp, nomeCliente, user, createAgendamento])
 
+    const selectedServiceData = services.find(s => s.id === selectedService)
+
     const isSlotOccupied = useCallback((time: string) => {
         // 1. Check if manually blocked by admin
         if (isTimeBlocked(time)) return true
 
-        // 2. Check if already booked by someone
-        const isBooked = publicAgendamentos.some(a => {
-            const agendamentoTime = format(new Date(a.data_hora!), 'HH:mm')
-            return agendamentoTime === time
-        })
-        if (isBooked) return true
-
-        // 3. If date is today, check if time has already passed
+        // 2. If date is today, check if time has already passed
         const today = new Date()
         if (selectedDate && isToday(selectedDate)) {
             const [hours, minutes] = time.split(':').map(Number)
@@ -153,10 +149,35 @@ export function Agendar() {
             if (isBefore(slotDateTime, today)) return true
         }
 
-        return false
-    }, [isTimeBlocked, publicAgendamentos, selectedDate])
+        if (!selectedDate) return false
 
-    const selectedServiceData = services.find(s => s.id === selectedService)
+        // Parse the candidate slot start time
+        const [slotH, slotM] = time.split(':').map(Number)
+        const slotStart = setMinutes(setHours(startOfDay(selectedDate), slotH), slotM)
+
+        // Duration of the service the user selected (in minutes)
+        const selectedDuration = selectedServiceData?.duration || 30
+        const slotEnd = addMinutes(slotStart, selectedDuration)
+
+        // 3. Check overlap with existing bookings
+        for (const a of publicAgendamentos) {
+            const bookingStart = new Date(a.data_hora!)
+            const bookingDuration = (a as any).duracao_minutos || 30
+            const bookingEnd = addMinutes(bookingStart, bookingDuration)
+
+            // Two intervals overlap if one starts before the other ends and vice versa
+            if (slotStart < bookingEnd && slotEnd > bookingStart) {
+                return true
+            }
+        }
+
+        // 4. Check if the selected service would go past the last slot (19:30 + 30 min = 20:00)
+        const lastSlotEnd = setMinutes(setHours(startOfDay(selectedDate), 20), 0)
+        if (slotEnd > lastSlotEnd) return true
+
+        return false
+    }, [isTimeBlocked, publicAgendamentos, selectedDate, selectedServiceData])
+
     const today = startOfDay(new Date())
     const maxDate = addDays(today, 90)
 

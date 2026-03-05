@@ -29,6 +29,7 @@ export function useAgendamentos() {
             servico: string
             data_hora: string
             nome_cliente?: string
+            duracao_minutos?: number
         }) => {
             const { data: result, error } = await supabase
                 .from('agendamentos')
@@ -38,6 +39,7 @@ export function useAgendamentos() {
                     whatsapp: data.whatsapp,
                     servico: data.servico,
                     data_hora: data.data_hora,
+                    duracao_minutos: data.duracao_minutos || 30,
                     status: 'confirmado',
                 })
                 .select()
