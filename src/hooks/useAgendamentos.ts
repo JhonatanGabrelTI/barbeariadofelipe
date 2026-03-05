@@ -20,7 +20,7 @@ export function useAgendamentos() {
             return data as Agendamento[]
         },
         enabled: !!user,
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 30, // 30 seconds (was 5 min)
     })
 
     const createAgendamento = useMutation({
@@ -48,7 +48,9 @@ export function useAgendamentos() {
             return result as Agendamento
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['agendamentos', user?.id] })
+            // Invalidate ALL related queries immediately
+            queryClient.invalidateQueries({ queryKey: ['agendamentos'] })
+            queryClient.invalidateQueries({ queryKey: ['agendamentos-public'] })
         },
     })
 
@@ -61,7 +63,8 @@ export function useAgendamentos() {
             if (error) throw error
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['agendamentos', user?.id] })
+            queryClient.invalidateQueries({ queryKey: ['agendamentos'] })
+            queryClient.invalidateQueries({ queryKey: ['agendamentos-public'] })
         },
     })
 
