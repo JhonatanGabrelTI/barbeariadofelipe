@@ -4,6 +4,7 @@ import { useAdmin } from '@/hooks/useAdmin'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ControleHorarios } from '@/components/ControleHorarios'
+import { WhatsAppConfig } from '@/components/WhatsAppConfig'
 import { toast } from 'sonner'
 import { format, isToday, isTomorrow, isPast, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -22,11 +23,21 @@ import {
     LayoutList,
     TimerOff,
     MessageCircle,
+    DollarSign,
 } from 'lucide-react'
+
+const servicePrices: Record<string, number> = {
+    'Corte Clássico': 40,
+    'Barba': 30,
+    'Corte + Barba': 60,
+    'Degradê': 45,
+    'Sobrancelha': 15,
+    'Hidratação': 50,
+}
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
-type Tab = 'agendamentos' | 'horarios'
+type Tab = 'agendamentos' | 'horarios' | 'config'
 
 export function Painel() {
     const { user, loading: authLoading, signInWithEmail, signInWithPassword, signOut } = useAuth()
@@ -78,7 +89,19 @@ export function Painel() {
         const confirmed = allAgendamentos.filter(a => a.status === 'confirmado').length
         const completed = allAgendamentos.filter(a => a.status === 'realizado').length
 
-        return { todayCount: todayAppointments.length, confirmed, completed, total: allAgendamentos.length }
+        const todayRevenue = todayAppointments.reduce((acc, a) => {
+            const price = servicePrices[a.servico] || 0
+            return acc + price
+        }, 0)
+
+        const totalConfirmedRevenue = allAgendamentos
+            .filter(a => a.status === 'confirmado' || a.status === 'realizado')
+            .reduce((acc, a) => {
+                const price = servicePrices[a.servico] || 0
+                return acc + price
+            }, 0)
+
+        return { todayCount: todayAppointments.length, confirmed, completed, total: allAgendamentos.length, todayRevenue, totalConfirmedRevenue }
     }, [allAgendamentos])
 
     const handleUpdateStatus = async (id: string, status: string) => {
@@ -277,6 +300,21 @@ export function Painel() {
                         </div>
                         <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
                     </div>
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 shadow-lg shadow-emerald-500/20 text-white">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <DollarSign className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-sm text-emerald-50 font-medium">Ganhos de Hoje</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-medium text-emerald-100">R$</span>
+                            <p className="text-3xl font-black">{stats.todayRevenue}</p>
+                        </div>
+                        <p className="text-[10px] text-emerald-100 mt-2 opacity-80 uppercase tracking-wider font-bold">
+                            Total Previsto: R$ {stats.totalConfirmedRevenue}
+                        </p>
+                    </div>
                 </div>
 
                 {/* Tabs */}
@@ -305,11 +343,25 @@ export function Painel() {
                         <TimerOff className="w-4 h-4" />
                         Controle de Horários
                     </button>
+                    <button
+                        onClick={() => setActiveTab('config')}
+                        className={[
+                            'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300',
+                            activeTab === 'config'
+                                ? 'bg-white text-gray-800 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        ].join(' ')}
+                    >
+                        <MessageCircle className="w-4 h-4" />
+                        Configurações
+                    </button>
                 </div>
 
                 {/* Tab Content */}
                 {activeTab === 'horarios' ? (
                     <ControleHorarios />
+                ) : activeTab === 'config' ? (
+                    <WhatsAppConfig />
                 ) : (
                     <>
                         {/* Filters */}

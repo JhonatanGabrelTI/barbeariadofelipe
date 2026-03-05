@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Scissors, Menu, X, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAdmin } from '@/hooks/useAdmin'
 import { Button } from '@/components/ui/button'
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
     const location = useLocation()
     const { user, signOut } = useAuth()
+    const { isAdmin } = useAdmin()
 
     const isActive = (path: string) => location.pathname === path
 
@@ -47,16 +49,18 @@ export function Navbar() {
                         </Link>
                         {user && (
                             <>
-                                <Link
-                                    to="/painel"
-                                    className={[
-                                        'text-sm font-medium transition-colors duration-200 flex items-center gap-1',
-                                        isActive('/painel') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'
-                                    ].join(' ')}
-                                >
-                                    <LayoutDashboard className="w-4 h-4" />
-                                    Painel
-                                </Link>
+                                {isAdmin && (
+                                    <Link
+                                        to="/painel"
+                                        className={[
+                                            'text-sm font-medium transition-colors duration-200 flex items-center gap-1',
+                                            isActive('/painel') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'
+                                        ].join(' ')}
+                                    >
+                                        <LayoutDashboard className="w-4 h-4" />
+                                        Painel
+                                    </Link>
+                                )}
                                 <Button
                                     variant="ghost"
                                     onClick={signOut}
@@ -109,17 +113,19 @@ export function Navbar() {
                         </Link>
                         {user && (
                             <>
-                                <Link
-                                    to="/painel"
-                                    onClick={() => setIsOpen(false)}
-                                    className={[
-                                        'block px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
-                                        isActive('/painel') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600 hover:bg-gray-50'
-                                    ].join(' ')}
-                                >
-                                    <LayoutDashboard className="w-4 h-4" />
-                                    Painel do Barbeiro
-                                </Link>
+                                {isAdmin && (
+                                    <Link
+                                        to="/painel"
+                                        onClick={() => setIsOpen(false)}
+                                        className={[
+                                            'block px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+                                            isActive('/painel') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600 hover:bg-gray-50'
+                                        ].join(' ')}
+                                    >
+                                        <LayoutDashboard className="w-4 h-4" />
+                                        Painel do Barbeiro
+                                    </Link>
+                                )}
                                 <button
                                     onClick={() => { signOut(); setIsOpen(false); }}
                                     className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"

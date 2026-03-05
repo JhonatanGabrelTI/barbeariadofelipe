@@ -142,10 +142,10 @@ export function Home() {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3 text-emerald-50">
                                         <MapPin className="w-5 h-5 shrink-0" />
-                                        <span className="text-sm">Rua Exemplo, 123 - Centro, Sua Cidade - SP</span>
+                                        <span className="text-sm">Rua Paraná, 98 - Centro, Ibaiti - PR, 84900-000</span>
                                     </div>
                                     <a
-                                        href="https://wa.me/5511999999999"
+                                        href="https://wa.me/5543998648935"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl px-4 py-3 transition-all duration-300 group"
@@ -154,7 +154,7 @@ export function Home() {
                                             <Phone className="w-5 h-5 text-white" />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-medium">(11) 99999-9999</div>
+                                            <div className="text-sm font-medium">(43) 99864-8935</div>
                                             <div className="text-xs text-emerald-100">Fale conosco no WhatsApp</div>
                                         </div>
                                     </a>

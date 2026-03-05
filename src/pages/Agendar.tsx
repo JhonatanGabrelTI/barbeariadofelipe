@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAgendamentos } from '@/hooks/useAgendamentos'
+import { useAgendamentosPublic } from '@/hooks/useAgendamentosPublic'
 import { useBlockedSlots } from '@/hooks/useBlockedSlots'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +15,9 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { format, addDays, isBefore, startOfDay, setHours, setMinutes } from 'date-fns'
+import { format, addDays, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CalendarOff, Clock, CheckCircle, Scissors, Mail, Ban } from 'lucide-react'
+import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail } from 'lucide-react'
 
 const services = [
     { id: 'corte-classico', name: 'Corte Clássico', price: 'R$ 40', duration: 30 },
@@ -29,6 +30,7 @@ const services = [
 
 const timeSlots = [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '12:00', '12:30',
     '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
     '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
     '19:00', '19:30',
@@ -40,6 +42,7 @@ export function Agendar() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
     const { isTimeBlocked } = useBlockedSlots(dateStr)
+    const { data: publicAgendamentos = [], isLoading: isLoadingPublic } = useAgendamentosPublic(dateStr)
     const [selectedTime, setSelectedTime] = useState<string | null>(null)
     const [selectedService, setSelectedService] = useState<string | null>(null)
     const [whatsapp, setWhatsapp] = useState('')
@@ -50,6 +53,12 @@ export function Agendar() {
     const [isBooking, setIsBooking] = useState(false)
     const [isLoggingIn, setIsLoggingIn] = useState(false)
     const [magicLinkSent, setMagicLinkSent] = useState(false)
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+    const [lastBookingDetails, setLastBookingDetails] = useState<{
+        service?: string,
+        date?: string,
+        time?: string
+    } | null>(null)
     const [step, setStep] = useState<'service' | 'datetime' | 'review'>('service')
 
     const handleEmailLogin = useCallback(async () => {
@@ -103,15 +112,21 @@ export function Agendar() {
                 servico: service?.name || '',
                 data_hora: dateTime.toISOString(),
             })
-            toast.success('✅ Agendamento confirmado!', {
-                description: `${service?.name} em ${format(dateTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
+            toast.success('✅ Agendamento realizado!', {
+                description: 'Confirme seu horário no WhatsApp abaixo.',
             })
+
+            setLastBookingDetails({
+                service: service?.name,
+                date: format(dateTime, "dd/MM/yyyy"),
+                time: selectedTime
+            })
+
             setShowConfirmDialog(false)
-            setSelectedDate(undefined)
-            setSelectedTime(null)
-            setSelectedService(null)
-            setNomeCliente('')
-            setStep('service')
+            setShowSuccessDialog(true)
+
+            // Note: We don't clear the fields yet so they can be used for the WhatsApp message
+            // They will be cleared when the success dialog is closed
         } catch {
             toast.error('❌ Erro ao agendar. Por favor, tente novamente.')
         } finally {
@@ -119,9 +134,31 @@ export function Agendar() {
         }
     }, [selectedDate, selectedTime, selectedService, whatsapp, nomeCliente, user, createAgendamento])
 
+    const isSlotOccupied = useCallback((time: string) => {
+        // 1. Check if manually blocked by admin
+        if (isTimeBlocked(time)) return true
+
+        // 2. Check if already booked by someone
+        const isBooked = publicAgendamentos.some(a => {
+            const agendamentoTime = format(new Date(a.data_hora!), 'HH:mm')
+            return agendamentoTime === time
+        })
+        if (isBooked) return true
+
+        // 3. If date is today, check if time has already passed
+        const today = new Date()
+        if (selectedDate && isToday(selectedDate)) {
+            const [hours, minutes] = time.split(':').map(Number)
+            const slotDateTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes)
+            if (isBefore(slotDateTime, today)) return true
+        }
+
+        return false
+    }, [isTimeBlocked, publicAgendamentos, selectedDate])
+
     const selectedServiceData = services.find(s => s.id === selectedService)
     const today = startOfDay(new Date())
-    const maxDate = addDays(today, 30)
+    const maxDate = addDays(today, 90)
 
     const isDateDisabled = (date: Date) => {
         return isBefore(date, today) || date > maxDate || date.getDay() === 0
@@ -257,7 +294,7 @@ export function Agendar() {
                                         <p className="text-gray-400 text-lg font-medium">Selecione uma data</p>
                                         <p className="text-gray-300 text-sm">Escolha um dia no calendário para ver os horários disponíveis</p>
                                     </div>
-                                ) : isLoading ? (
+                                ) : (isLoading || isLoadingPublic) ? (
                                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                         {Array.from({ length: 12 }).map((_, i) => (
                                             <Skeleton key={i} className="h-12 rounded-xl" />
@@ -266,7 +303,7 @@ export function Agendar() {
                                 ) : (
                                     <div>
                                         <h3 className="text-sm font-medium text-gray-500 mb-3">
-                                            Horários para {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+                                            Horários para {selectedDate && format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
                                         </h3>
                                         {timeSlots.length === 0 ? (
                                             <div className="text-center py-12">
@@ -279,22 +316,22 @@ export function Agendar() {
                                         ) : (
                                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                                 {timeSlots.map((time) => {
-                                                    const blocked = isTimeBlocked(time)
+                                                    const occupied = isSlotOccupied(time)
                                                     return (
                                                         <button
                                                             key={time}
-                                                            onClick={() => !blocked && handleTimeSelect(time)}
-                                                            disabled={blocked}
+                                                            onClick={() => !occupied && handleTimeSelect(time)}
+                                                            disabled={occupied}
                                                             className={[
                                                                 'h-16 rounded-2xl border-2 text-lg font-bold transition-all duration-200',
-                                                                blocked
+                                                                occupied
                                                                     ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
                                                                     : selectedTime === time
                                                                         ? 'border-emerald-500 bg-emerald-500 text-white shadow-xl scale-105'
                                                                         : 'border-gray-100 bg-white text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 hover:scale-110 active:scale-95'
                                                             ].join(' ')}
                                                         >
-                                                            {blocked ? (
+                                                            {occupied ? (
                                                                 <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
                                                                     <Ban className="w-4 h-4 mb-0.5" />
                                                                     Ocupado
@@ -542,6 +579,46 @@ export function Agendar() {
                         </Button>
                         <Button variant="ghost" onClick={() => setShowConfirmDialog(false)} className="w-full h-12 rounded-xl text-gray-500 font-medium">
                             Voltar e alterar
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+            {/* Success Dialog with WhatsApp Redirect */}
+            <Dialog open={showSuccessDialog} onOpenChange={(open) => {
+                setShowSuccessDialog(open)
+                if (!open) {
+                    // Reset everything when closing
+                    setSelectedDate(undefined)
+                    setSelectedTime(null)
+                    setSelectedService(null)
+                    setNomeCliente('')
+                    setStep('service')
+                    setLastBookingDetails(null)
+                }
+            }}>
+                <DialogContent className="sm:max-w-md rounded-3xl p-8 text-center">
+                    <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="w-10 h-10 text-emerald-500" />
+                    </div>
+                    <DialogHeader>
+                        <DialogTitle className="text-3xl font-black text-gray-900">Agendado!</DialogTitle>
+                        <DialogDescription className="text-lg text-gray-500 pt-2">
+                            Seu horário foi reservado com sucesso no sistema.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="bg-gray-50 rounded-2xl p-6 my-6 text-left space-y-2">
+                        <p className="text-sm text-gray-400 uppercase font-bold tracking-wider">Resumo</p>
+                        <p className="text-gray-800 font-medium">✨ {lastBookingDetails?.service}</p>
+                        <p className="text-gray-800 font-medium">📅 {lastBookingDetails?.date} às {lastBookingDetails?.time}</p>
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <Button
+                            onClick={() => setShowSuccessDialog(false)}
+                            className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-lg font-bold shadow-lg shadow-emerald-500/20"
+                        >
+                            OK, ENTENDI
                         </Button>
                     </div>
                 </DialogContent>

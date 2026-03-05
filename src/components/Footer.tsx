@@ -26,16 +26,16 @@ export function Footer() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 text-gray-300 text-sm">
                                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Rua Exemplo, 123 - Centro, Sua Cidade - SP</span>
+                                <span>Rua Paraná, 98 - Centro, Ibaiti - PR, 84900-000</span>
                             </div>
                             <a
-                                href="https://wa.me/5511999999999"
+                                href="https://wa.me/5543998648935"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-3 text-gray-300 hover:text-emerald-400 text-sm transition-colors"
                             >
                                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>(11) 99999-9999</span>
+                                <span>(43) 99864-8935</span>
                             </a>
                         </div>
                     </div>
@@ -46,11 +46,7 @@ export function Footer() {
                         <div className="space-y-2">
                             <div className="flex items-center gap-3 text-gray-300 text-sm">
                                 <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Seg - Sex: 09:00 às 20:00</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-300 text-sm">
-                                <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Sáb: 09:00 às 18:00</span>
+                                <span>Seg - Sáb: 09:00 às 20:00</span>
                             </div>
                             <div className="flex items-center gap-3 text-gray-300 text-sm">
                                 <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
