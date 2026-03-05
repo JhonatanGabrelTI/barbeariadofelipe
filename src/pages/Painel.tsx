@@ -231,9 +231,30 @@ export function Painel() {
                                 </div>
                             )}
 
-                            <Button type="submit" className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold transition-all">
+                            <Button
+                                type="submit"
+                                className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold transition-all"
+                            >
                                 {showPassword ? 'Entrar com Senha' : 'Receber Link de Acesso'}
                             </Button>
+
+                            {showPassword && (
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const { error } = await signInWithEmail(email);
+                                            if (error) throw error;
+                                            toast.success('✨ Link enviado! Verifique seu e-mail.');
+                                        } catch (err) {
+                                            toast.error('❌ Erro ao enviar link.');
+                                        }
+                                    }}
+                                    className="w-full text-sm text-gray-500 hover:text-emerald-600 transition-colors font-medium py-2"
+                                >
+                                    Ou prefiro entrar com Link Mágico
+                                </button>
+                            )}
                         </form>
                     </div>
                 </div>
