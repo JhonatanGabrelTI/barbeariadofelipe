@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import { Home } from '@/pages/Home'
 import { Agendar } from '@/pages/Agendar'
 import { Painel } from '@/pages/Painel'
+import { Produtos } from '@/pages/Produtos'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/agendar" element={<Agendar />} />
                 <Route path="/painel" element={<Painel />} />
+                <Route path="/produtos" element={<Produtos />} />
               </Routes>
             </main>
             <Footer />

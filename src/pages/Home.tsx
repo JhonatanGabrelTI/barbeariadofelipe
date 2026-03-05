@@ -3,12 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Phone, MapPin, Scissors, Star, Clock, Users } from 'lucide-react'
 
 const services = [
-    { name: 'Corte Clássico', price: 'R$ 40', duration: '30 min', icon: Scissors },
-    { name: 'Barba', price: 'R$ 30', duration: '20 min', icon: Scissors },
-    { name: 'Corte + Barba', price: 'R$ 60', duration: '45 min', icon: Scissors },
-    { name: 'Degradê', price: 'R$ 45', duration: '40 min', icon: Scissors },
-    { name: 'Sobrancelha', price: 'R$ 15', duration: '10 min', icon: Scissors },
-    { name: 'Hidratação', price: 'R$ 50', duration: '30 min', icon: Scissors },
+    { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors },
+    { name: 'Barba Completa', price: 'R$ 35', duration: '30 min', icon: Scissors },
+    { name: 'Cabelo e Barba', price: 'R$ 65', duration: '50 min', icon: Scissors },
+    { name: 'Sobrancelhas', price: 'R$ 15', duration: '15 min', icon: Scissors },
+    { name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: '40 min', icon: Scissors },
+    { name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: '60 min', icon: Scissors },
 ]
 
 const stats = [

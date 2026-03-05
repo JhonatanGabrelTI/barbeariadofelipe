@@ -20,12 +20,12 @@ import { ptBR } from 'date-fns/locale'
 import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail } from 'lucide-react'
 
 const services = [
-    { id: 'corte-classico', name: 'Corte Clássico', price: 'R$ 40', duration: 30 },
-    { id: 'barba', name: 'Barba', price: 'R$ 30', duration: 20 },
-    { id: 'corte-barba', name: 'Corte + Barba', price: 'R$ 60', duration: 45 },
-    { id: 'degrade', name: 'Degradê', price: 'R$ 45', duration: 40 },
-    { id: 'sobrancelha', name: 'Sobrancelha', price: 'R$ 15', duration: 10 },
-    { id: 'hidratacao', name: 'Hidratação', price: 'R$ 50', duration: 30 },
+    { id: 'corte-cabelo', name: 'Corte de Cabelo', price: 'R$ 35', duration: 30 },
+    { id: 'barba-completa', name: 'Barba Completa', price: 'R$ 35', duration: 30 },
+    { id: 'cabelo-barba', name: 'Cabelo e Barba', price: 'R$ 65', duration: 50 },
+    { id: 'sobrancelhas', name: 'Sobrancelhas', price: 'R$ 15', duration: 15 },
+    { id: 'cabelo-sobrancelhas', name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: 40 },
+    { id: 'cabelo-barba-sobrancelhas', name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: 60 },
 ]
 
 const timeSlots = [

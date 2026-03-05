@@ -29,12 +29,12 @@ import {
 } from 'lucide-react'
 
 const servicePrices: Record<string, number> = {
-    'Corte Clássico': 40,
-    'Barba': 30,
-    'Corte + Barba': 60,
-    'Degradê': 45,
-    'Sobrancelha': 15,
-    'Hidratação': 50,
+    'Corte de Cabelo': 35,
+    'Barba Completa': 35,
+    'Cabelo e Barba': 65,
+    'Sobrancelhas': 15,
+    'Cabelo e Sobrancelhas': 45,
+    'Cabelo, Barba e Sobrancelhas': 75,
 }
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'

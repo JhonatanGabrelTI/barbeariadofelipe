@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Scissors, Menu, X, LayoutDashboard } from 'lucide-react'
+import { Scissors, Menu, X, LayoutDashboard, ShoppingBag } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAdmin } from '@/hooks/useAdmin'
 import { Button } from '@/components/ui/button'
@@ -46,6 +46,16 @@ export function Navbar() {
                             ].join(' ')}
                         >
                             Agendar
+                        </Link>
+                        <Link
+                            to="/produtos"
+                            className={[
+                                'text-sm font-medium transition-colors duration-200 flex items-center gap-1',
+                                isActive('/produtos') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'
+                            ].join(' ')}
+                        >
+                            <ShoppingBag className="w-4 h-4" />
+                            Produtos
                         </Link>
                         {user && (
                             <>
@@ -110,6 +120,17 @@ export function Navbar() {
                             ].join(' ')}
                         >
                             Agendar
+                        </Link>
+                        <Link
+                            to="/produtos"
+                            onClick={() => setIsOpen(false)}
+                            className={[
+                                'block px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+                                isActive('/produtos') ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600 hover:bg-gray-50'
+                            ].join(' ')}
+                        >
+                            <ShoppingBag className="w-4 h-4" />
+                            Produtos
                         </Link>
                         {user && (
                             <>
