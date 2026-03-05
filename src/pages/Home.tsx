@@ -13,7 +13,7 @@ const services = [
 
 const stats = [
     { label: 'Clientes Satisfeitos', value: '2.000+', icon: Users },
-    { label: 'Anos de Experiência', value: '8+', icon: Clock },
+    { label: 'Anos de Experiência', value: '6+', icon: Clock },
     { label: 'Avaliação Média', value: '4.9', icon: Star },
 ]
 
