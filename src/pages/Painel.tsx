@@ -24,6 +24,8 @@ import {
     TimerOff,
     MessageCircle,
     DollarSign,
+    Eye,
+    EyeOff,
 } from 'lucide-react'
 
 const servicePrices: Record<string, number> = {
@@ -45,6 +47,7 @@ export function Painel() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false)
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('todos')
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('hoje')
     const [activeTab, setActiveTab] = useState<Tab>('agendamentos')
@@ -208,15 +211,24 @@ export function Painel() {
                             />
 
                             {showPassword && (
-                                <input
-                                    name="password"
-                                    type="password"
-                                    placeholder="Sua senha de admin"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    className="w-full h-12 rounded-xl border border-gray-100 bg-gray-50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all animate-in fade-in slide-in-from-top-1"
-                                />
+                                <div className="relative">
+                                    <input
+                                        name="password"
+                                        type={isPasswordVisible ? "text" : "password"}
+                                        placeholder="Sua senha de admin"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        className="w-full h-12 rounded-xl border border-gray-100 bg-gray-50 px-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all animate-in fade-in slide-in-from-top-1"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 transition-colors"
+                                    >
+                                        {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             )}
 
                             <Button type="submit" className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold transition-all">
