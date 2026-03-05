@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ControleHorarios } from '@/components/ControleHorarios'
 import { WhatsAppConfig } from '@/components/WhatsAppConfig'
+import { GerenciarProdutos } from '@/components/GerenciarProdutos'
 import { toast } from 'sonner'
 import { format, isToday, isTomorrow, isPast, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -26,6 +27,7 @@ import {
     DollarSign,
     Eye,
     EyeOff,
+    Package,
 } from 'lucide-react'
 
 const servicePrices: Record<string, number> = {
@@ -39,7 +41,7 @@ const servicePrices: Record<string, number> = {
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
-type Tab = 'agendamentos' | 'horarios' | 'config'
+type Tab = 'agendamentos' | 'horarios' | 'config' | 'produtos'
 
 export function Painel() {
     const { user, loading: authLoading, signInWithEmail, signInWithPassword, signOut } = useAuth()
@@ -390,6 +392,18 @@ export function Painel() {
                         <MessageCircle className="w-4 h-4" />
                         Configurações
                     </button>
+                    <button
+                        onClick={() => setActiveTab('produtos')}
+                        className={[
+                            'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300',
+                            activeTab === 'produtos'
+                                ? 'bg-white text-gray-800 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        ].join(' ')}
+                    >
+                        <Package className="w-4 h-4" />
+                        Produtos
+                    </button>
                 </div>
 
                 {/* Tab Content */}
@@ -397,6 +411,8 @@ export function Painel() {
                     <ControleHorarios />
                 ) : activeTab === 'config' ? (
                     <WhatsAppConfig />
+                ) : activeTab === 'produtos' ? (
+                    <GerenciarProdutos />
                 ) : (
                     <>
                         {/* Filters */}
