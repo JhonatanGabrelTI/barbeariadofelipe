@@ -188,7 +188,7 @@ export function Painel() {
                                         toast.error('⚠️ Limite excedido. Tente usar uma senha!');
                                         if (email === 'barbeariadofelipe2020@gmail.com') setShowPassword(true);
                                     } else {
-                                        toast.error('❌ Erro ao enviar link.');
+                                        toast.error(`❌ Erro: ${err.message || 'Falha ao enviar link'}`);
                                     }
                                 }
                             }
@@ -246,8 +246,8 @@ export function Painel() {
                                             const { error } = await signInWithEmail(email);
                                             if (error) throw error;
                                             toast.success('✨ Link enviado! Verifique seu e-mail.');
-                                        } catch (err) {
-                                            toast.error('❌ Erro ao enviar link.');
+                                        } catch (err: any) {
+                                            toast.error(`❌ Erro: ${err.message || 'Falha ao enviar link'}`);
                                         }
                                     }}
                                     className="w-full text-sm text-gray-500 hover:text-emerald-600 transition-colors font-medium py-2"
