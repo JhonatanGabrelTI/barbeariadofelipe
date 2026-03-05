@@ -172,11 +172,13 @@ export function Painel() {
                             e.preventDefault();
                             if (showPassword && password) {
                                 try {
-                                    const { error } = await signInWithPassword(email, password);
+                                    const trimmedEmail = email.trim();
+                                    const trimmedPassword = password.trim();
+                                    const { error } = await signInWithPassword(trimmedEmail, trimmedPassword);
                                     if (error) throw error;
                                     toast.success('✨ Bem-vindo de volta!');
-                                } catch (err) {
-                                    toast.error('❌ Senha incorreta.');
+                                } catch (err: any) {
+                                    toast.error(`❌ Erro: ${err.message || 'Senha incorreta'}`);
                                 }
                             } else {
                                 try {
