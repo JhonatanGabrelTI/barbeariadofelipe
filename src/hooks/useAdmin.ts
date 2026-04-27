@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -31,8 +32,34 @@ export function useAdmin() {
             return data || []
         },
         enabled: isAdmin,
-        staleTime: 1000 * 60 * 2, // 2 minutes
+        staleTime: 1000 * 30, // 30 seconds
+        refetchInterval: 1000 * 30, // Auto-update every 30 seconds
     })
+
+    // Realtime subscription
+    useEffect(() => {
+        if (!isAdmin) return
+
+        const channel = supabase
+            .channel('admin-agendamentos-changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'agendamentos'
+                },
+                () => {
+                    // Invalidate and refetch immediately when any change occurs
+                    queryClient.invalidateQueries({ queryKey: ['all-agendamentos'] })
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [isAdmin, queryClient])
 
     const updateStatus = useMutation({
         mutationFn: async ({ id, status }: { id: string; status: string }) => {
