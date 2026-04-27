@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAgendamentos } from '@/hooks/useAgendamentos'
 import { useAgendamentosPublic } from '@/hooks/useAgendamentosPublic'
 import { useBlockedSlots } from '@/hooks/useBlockedSlots'
@@ -106,6 +107,13 @@ export function Agendar() {
         const dateTime = setMinutes(setHours(selectedDate, hours), minutes)
 
         try {
+            if (!isSupabaseConfigured) {
+                toast.error('❌ Erro de Configuração', {
+                    description: 'O Supabase não foi configurado corretamente. Por favor, adicione as chaves VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env ou nas configurações da Vercel.',
+                })
+                return
+            }
+
             await createAgendamento.mutateAsync({
                 whatsapp,
                 nome_cliente: nomeCliente || undefined,
