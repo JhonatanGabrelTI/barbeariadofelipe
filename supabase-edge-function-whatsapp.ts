@@ -24,10 +24,13 @@ Deno.serve(async (req) => {
 
         // 3. Prepare Message
         const whatsapp = record.whatsapp.replace(/\D/g, ""); // Remove non-digits
-        const date = new Date(record.data_hora).toLocaleDateString("pt-BR");
+        const date = new Date(record.data_hora).toLocaleDateString("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+        });
         const time = new Date(record.data_hora).toLocaleTimeString("pt-BR", {
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: "America/Sao_Paulo",
         });
 
         const message = `Olá ${record.nome_cliente || "Cliente"}! 👋 Seu agendamento de *${record.servico}* na *Felipe Barbearia* foi confirmado!\n\n📅 *Data:* ${date}\n⏰ *Horário:* ${time}\n\nAguardamos você! ✂️`;

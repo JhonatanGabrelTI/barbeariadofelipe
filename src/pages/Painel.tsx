@@ -122,8 +122,16 @@ export function Painel() {
 
     const handleWhatsAppReminder = (agendamento: any) => {
         const dateTime = new Date(agendamento.data_hora)
-        const timeStr = format(dateTime, 'HH:mm')
-        const dateStr = format(dateTime, 'dd/MM')
+        const timeStr = dateTime.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Sao_Paulo'
+        })
+        const dateStr = dateTime.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            timeZone: 'America/Sao_Paulo'
+        })
 
         const message = `Olá! 💈 Sou da Felipe Barbearia. Passando para confirmar seu horário de *${agendamento.servico}* no dia *${dateStr}* às *${timeStr}*. Estamos te esperando!`
         const phone = agendamento.whatsapp.replace(/\D/g, '')
