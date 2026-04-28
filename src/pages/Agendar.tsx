@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAgendamentos } from '@/hooks/useAgendamentos'
 import { useAgendamentosPublic } from '@/hooks/useAgendamentosPublic'
 import { useBlockedSlots } from '@/hooks/useBlockedSlots'
+import { useServicos } from '@/hooks/useServicos'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Calendar } from '@/components/ui/calendar'
@@ -18,15 +19,15 @@ import {
 import { toast } from 'sonner'
 import { format, addDays, addMinutes, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail } from 'lucide-react'
+import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info } from 'lucide-react'
 
-const services = [
+const defaultServices = [
     { id: 'corte-cabelo', name: 'Corte de Cabelo', price: 'R$ 35', duration: 30 },
     { id: 'barba-completa', name: 'Barba Completa', price: 'R$ 35', duration: 30 },
     { id: 'cabelo-barba', name: 'Cabelo e Barba', price: 'R$ 65', duration: 50 },
-    { id: 'sobrancelhas', name: 'Sobrancelhas', price: 'R$ 15', duration: 15 },
-    { id: 'cabelo-sobrancelhas', name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: 40 },
-    { id: 'cabelo-barba-sobrancelhas', name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: 60 },
+    { id: 'sobrancelhas', name: 'Sobrancelhas', price: 'R$ 15', duration: 10 },
+    { id: 'cabelo-sobrancelhas', name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: 35 },
+    { id: 'cabelo-barba-sobrancelhas', name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: 55 },
 ]
 
 const timeSlots = [
@@ -40,6 +41,19 @@ const timeSlots = [
 export function Agendar() {
     const { user, loading: authLoading, signInWithEmail, signInWithGoogle } = useAuth()
     const { agendamentos, isLoading, createAgendamento } = useAgendamentos()
+    const { servicos } = useServicos()
+
+    // Use dynamic services from Supabase, fallback to defaults while loading
+    const services = useMemo(() => {
+        if (servicos.length === 0) return defaultServices
+        return servicos.map(s => ({
+            id: s.id,
+            name: s.nome,
+            price: `R$ ${s.preco}`,
+            duration: s.duracao_minutos,
+        }))
+    }, [servicos])
+
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
     const { isTimeBlocked } = useBlockedSlots(dateStr)
@@ -152,19 +166,36 @@ export function Agendar() {
 
     const selectedServiceData = services.find(s => s.id === selectedService)
 
-    const isSlotOccupied = useCallback((time: string) => {
+    // Returns the reason a slot is blocked, or null if it's free
+    type BlockReason = 'blocked' | 'past' | 'occupied' | 'next-occupied' | 'exceeds-hours'
+
+    // Helper: check if a specific 30-min slot is directly occupied by an existing booking
+    const isSlotDirectlyOccupied = useCallback((slotStart: Date) => {
+        const slotEnd = addMinutes(slotStart, 30)
+        for (const a of publicAgendamentos) {
+            const bookingStart = new Date(a.data_hora!)
+            const bookingDuration = (a as any).duracao_minutos || 30
+            const bookingEnd = addMinutes(bookingStart, bookingDuration)
+            if (slotStart < bookingEnd && slotEnd > bookingStart) {
+                return true
+            }
+        }
+        return false
+    }, [publicAgendamentos])
+
+    const getSlotBlockReason = useCallback((time: string): BlockReason | null => {
         // 1. Check if manually blocked by admin
-        if (isTimeBlocked(time)) return true
+        if (isTimeBlocked(time)) return 'blocked'
 
         // 2. If date is today, check if time has already passed
-        const today = new Date()
+        const now = new Date()
         if (selectedDate && isToday(selectedDate)) {
             const [hours, minutes] = time.split(':').map(Number)
             const slotDateTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes)
-            if (isBefore(slotDateTime, today)) return true
+            if (isBefore(slotDateTime, now)) return 'past'
         }
 
-        if (!selectedDate) return false
+        if (!selectedDate) return null
 
         // Parse the candidate slot start time
         const [slotH, slotM] = time.split(':').map(Number)
@@ -174,24 +205,36 @@ export function Agendar() {
         const selectedDuration = selectedServiceData?.duration || 30
         const slotEnd = addMinutes(slotStart, selectedDuration)
 
-        // 3. Check overlap with existing bookings
-        for (const a of publicAgendamentos) {
-            const bookingStart = new Date(a.data_hora!)
-            const bookingDuration = (a as any).duracao_minutos || 30
-            const bookingEnd = addMinutes(bookingStart, bookingDuration)
+        // 3. Check if THIS slot itself is directly occupied (30-min base check)
+        if (isSlotDirectlyOccupied(slotStart)) return 'occupied'
 
-            // Two intervals overlap if one starts before the other ends and vice versa
-            if (slotStart < bookingEnd && slotEnd > bookingStart) {
-                return true
+        // 4. Check if the selected service would go past the last slot (20:00)
+        const lastSlotEnd = setMinutes(setHours(startOfDay(selectedDate), 20), 0)
+        if (slotEnd > lastSlotEnd) return 'exceeds-hours'
+
+        // 5. For services > 30min, check if the extended time overlaps with occupied slots
+        if (selectedDuration > 30) {
+            for (const a of publicAgendamentos) {
+                const bookingStart = new Date(a.data_hora!)
+                const bookingDuration = (a as any).duracao_minutos || 30
+                const bookingEnd = addMinutes(bookingStart, bookingDuration)
+
+                if (slotStart < bookingEnd && slotEnd > bookingStart) {
+                    return 'next-occupied'
+                }
+            }
+
+            // Also check if any of the intermediate slots are blocked by admin
+            let checkTime = addMinutes(slotStart, 30)
+            while (checkTime < slotEnd) {
+                const checkTimeStr = `${String(checkTime.getHours()).padStart(2, '0')}:${String(checkTime.getMinutes()).padStart(2, '0')}`
+                if (isTimeBlocked(checkTimeStr)) return 'next-occupied'
+                checkTime = addMinutes(checkTime, 30)
             }
         }
 
-        // 4. Check if the selected service would go past the last slot (19:30 + 30 min = 20:00)
-        const lastSlotEnd = setMinutes(setHours(startOfDay(selectedDate), 20), 0)
-        if (slotEnd > lastSlotEnd) return true
-
-        return false
-    }, [isTimeBlocked, publicAgendamentos, selectedDate, selectedServiceData])
+        return null
+    }, [isTimeBlocked, publicAgendamentos, selectedDate, selectedServiceData, isSlotDirectlyOccupied])
 
     const today = startOfDay(new Date())
     const maxDate = addDays(today, 90)
@@ -350,33 +393,61 @@ export function Agendar() {
                                                 </p>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                                {timeSlots.map((time) => {
-                                                    const occupied = isSlotOccupied(time)
-                                                    return (
-                                                        <button
-                                                            key={time}
-                                                            onClick={() => !occupied && handleTimeSelect(time)}
-                                                            disabled={occupied}
-                                                            className={[
-                                                                'h-16 rounded-2xl border-2 text-lg font-bold transition-all duration-200',
-                                                                occupied
-                                                                    ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
-                                                                    : selectedTime === time
-                                                                        ? 'border-emerald-500 bg-emerald-500 text-white shadow-xl scale-105'
-                                                                        : 'border-gray-100 bg-white text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 hover:scale-110 active:scale-95'
-                                                            ].join(' ')}
-                                                        >
-                                                            {occupied ? (
-                                                                <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
-                                                                    <Ban className="w-4 h-4 mb-0.5" />
-                                                                    Ocupado
-                                                                </span>
-                                                            ) : time}
-                                                        </button>
-                                                    )
-                                                })}
-                                            </div>
+                                            <>
+                                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                                    {timeSlots.map((time) => {
+                                                        const blockReason = getSlotBlockReason(time)
+                                                        const isBlocked = blockReason !== null
+                                                        const isNextOccupied = blockReason === 'next-occupied'
+
+                                                        return (
+                                                            <button
+                                                                key={time}
+                                                                onClick={() => !isBlocked && handleTimeSelect(time)}
+                                                                disabled={isBlocked}
+                                                                title={
+                                                                    isNextOccupied
+                                                                        ? `Seu serviço dura ${selectedServiceData?.duration}min e o próximo horário já está ocupado`
+                                                                        : undefined
+                                                                }
+                                                                className={[
+                                                                    'h-16 rounded-2xl border-2 text-lg font-bold transition-all duration-200',
+                                                                    isNextOccupied
+                                                                        ? 'border-amber-200 bg-amber-50 text-amber-500 cursor-not-allowed'
+                                                                        : isBlocked
+                                                                            ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
+                                                                            : selectedTime === time
+                                                                                ? 'border-emerald-500 bg-emerald-500 text-white shadow-xl scale-105'
+                                                                                : 'border-gray-100 bg-white text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 hover:scale-110 active:scale-95'
+                                                                ].join(' ')}
+                                                            >
+                                                                {isNextOccupied ? (
+                                                                    <span className="flex flex-col items-center justify-center text-[9px] uppercase tracking-tighter leading-tight px-1">
+                                                                        <AlertTriangle className="w-4 h-4 mb-0.5" />
+                                                                        <span>Próx. ocupado</span>
+                                                                    </span>
+                                                                ) : isBlocked ? (
+                                                                    <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
+                                                                        <Ban className="w-4 h-4 mb-0.5" />
+                                                                        Ocupado
+                                                                    </span>
+                                                                ) : time}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
+
+                                                {/* Info note for services > 30min */}
+                                                {selectedServiceData && selectedServiceData.duration > 30 && (
+                                                    <div className="flex items-start gap-2 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
+                                                        <Info className="w-5 h-5 mt-0.5 shrink-0" />
+                                                        <p>
+                                                            <strong>{selectedServiceData.name}</strong> dura <strong>{selectedServiceData.duration} minutos</strong> e pode ocupar mais de 1 horário.
+                                                            Horários marcados em <span className="font-bold text-amber-600">amarelo</span> estão livres, mas o próximo já está ocupado, então não é possível selecionar.
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 )}

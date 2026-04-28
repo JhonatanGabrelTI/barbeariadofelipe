@@ -11,22 +11,14 @@ import {
 import { format, startOfDay, startOfWeek, startOfMonth, endOfMonth, isWithinInterval, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-const servicePrices: Record<string, number> = {
-    'Corte de Cabelo': 35,
-    'Barba Completa': 35,
-    'Cabelo e Barba': 65,
-    'Sobrancelhas': 15,
-    'Cabelo e Sobrancelhas': 45,
-    'Cabelo, Barba e Sobrancelhas': 75,
+interface FinanceiroProps {
+    allAgendamentos: any[]
+    servicePrices: Record<string, number>
 }
 
 type Period = 'hoje' | 'semana' | 'mes'
 
-interface FinanceiroProps {
-    allAgendamentos: any[]
-}
-
-export function Financeiro({ allAgendamentos }: FinanceiroProps) {
+export function Financeiro({ allAgendamentos, servicePrices }: FinanceiroProps) {
     const [period, setPeriod] = useState<Period>('hoje')
 
     const finance = useMemo(() => {

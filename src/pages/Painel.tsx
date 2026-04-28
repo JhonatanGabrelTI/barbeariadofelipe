@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAdmin } from '@/hooks/useAdmin'
+import { useServicos } from '@/hooks/useServicos'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ControleHorarios } from '@/components/ControleHorarios'
 import { WhatsAppConfig } from '@/components/WhatsAppConfig'
 import { GerenciarProdutos } from '@/components/GerenciarProdutos'
+import { ConfigurarServicos } from '@/components/ConfigurarServicos'
 import { Financeiro } from '@/components/Financeiro'
 import { toast } from 'sonner'
 import { format, isToday, isTomorrow, isPast, startOfDay, addDays } from 'date-fns'
@@ -29,24 +31,17 @@ import {
     Eye,
     EyeOff,
     Package,
+    Settings2,
 } from 'lucide-react'
-
-const servicePrices: Record<string, number> = {
-    'Corte de Cabelo': 35,
-    'Barba Completa': 35,
-    'Cabelo e Barba': 65,
-    'Sobrancelhas': 15,
-    'Cabelo e Sobrancelhas': 45,
-    'Cabelo, Barba e Sobrancelhas': 75,
-}
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
-type Tab = 'agendamentos' | 'horarios' | 'config' | 'produtos' | 'financeiro'
+type Tab = 'agendamentos' | 'horarios' | 'servicos' | 'config' | 'produtos' | 'financeiro'
 
 export function Painel() {
     const { user, loading: authLoading, signInWithEmail, signInWithPassword, signOut } = useAuth()
     const { isAdmin, isCheckingAdmin, allAgendamentos, isLoading, updateStatus } = useAdmin()
+    const { servicePrices } = useServicos()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -303,9 +298,18 @@ export function Painel() {
         <div className="min-h-screen pt-24 pb-16 px-4">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">Painel do Barbeiro</h1>
-                    <p className="text-gray-500">Gerencie seus agendamentos e controle seus horários.</p>
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Painel do Barbeiro</h1>
+                        <p className="text-gray-500">Gerencie seus agendamentos e controle seus horários.</p>
+                    </div>
+                    <Button 
+                        onClick={() => setActiveTab('servicos')}
+                        className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200 gap-2 h-12 px-6 transition-all hover:scale-105 active:scale-95"
+                    >
+                        <Scissors className="w-5 h-5" />
+                        Ajustar Preços e Tempos
+                    </Button>
                 </div>
 
                 {/* Stats Cards */}
@@ -402,6 +406,18 @@ export function Painel() {
                         Configurações
                     </button>
                     <button
+                        onClick={() => setActiveTab('servicos')}
+                        className={[
+                            'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300',
+                            activeTab === 'servicos'
+                                ? 'bg-white text-gray-800 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        ].join(' ')}
+                    >
+                        <Settings2 className="w-4 h-4" />
+                        Serviços
+                    </button>
+                    <button
                         onClick={() => setActiveTab('produtos')}
                         className={[
                             'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
@@ -430,12 +446,14 @@ export function Painel() {
                 {/* Tab Content */}
                 {activeTab === 'horarios' ? (
                     <ControleHorarios />
+                ) : activeTab === 'servicos' ? (
+                    <ConfigurarServicos />
                 ) : activeTab === 'config' ? (
                     <WhatsAppConfig />
                 ) : activeTab === 'produtos' ? (
                     <GerenciarProdutos />
                 ) : activeTab === 'financeiro' ? (
-                    <Financeiro allAgendamentos={allAgendamentos} />
+                    <Financeiro allAgendamentos={allAgendamentos} servicePrices={servicePrices} />
                 ) : (
                     <>
                         {/* Filters */}

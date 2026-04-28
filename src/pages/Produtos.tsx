@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Coffee, ShoppingBag, Check, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,6 +20,24 @@ const categoryIcons: Record<string, typeof Coffee> = {
 
 export function Produtos() {
     const { produtos, isLoading } = useProdutos()
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) entry.target.classList.add('revealed')
+                })
+            },
+            { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+        )
+        const el = scrollRef.current
+        if (el) {
+            el.querySelectorAll('.scroll-reveal, .scroll-reveal-left, .scroll-reveal-right, .scroll-reveal-scale')
+                .forEach((child) => observer.observe(child))
+        }
+        return () => observer.disconnect()
+    }, [isLoading])
 
     // Only show active products with stock
     const activeProducts = produtos.filter(p => p.ativo)
@@ -32,11 +51,11 @@ export function Produtos() {
     )
 
     return (
-        <div className="min-h-screen pt-24 pb-16 px-4 bg-gray-50/50">
+        <div className="min-h-screen pt-24 pb-16 px-4 bg-gray-50/50" ref={scrollRef}>
             <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-16">
+                <div className="text-center mb-16 animate-fade-in-up">
                     <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4 tracking-tight">Produtos & Bebidas</h1>
-                    <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                    <p className="text-gray-500 text-lg max-w-2xl mx-auto animate-fade-in-delay-1">
                         Aproveite nossa seleção exclusiva de produtos para cuidar do seu visual em casa e nossas bebidas premium enquanto aguarda.
                     </p>
                 </div>
@@ -59,8 +78,8 @@ export function Produtos() {
                             const Icon = categoryIcons[categoria] || Package
                             return (
                                 <section key={categoria}>
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                                    <div className="flex items-center gap-3 mb-8 scroll-reveal-left">
+                                        <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center group-hover:rotate-6 transition-transform">
                                             <Icon className="w-6 h-6 text-emerald-600" />
                                         </div>
                                         <h2 className="text-2xl font-bold text-gray-800">
@@ -72,7 +91,7 @@ export function Produtos() {
                                         /* Compact card layout for drinks */
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                             {items.map(item => (
-                                                <div key={item.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+                                                <div key={item.id} className="scroll-reveal bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-2 hover-glow">
                                                     <div className="flex items-center justify-between mb-2">
                                                         <h3 className="font-bold text-gray-800">{item.nome}</h3>
                                                         <span className="text-emerald-500 font-bold">
@@ -99,7 +118,7 @@ export function Produtos() {
                                         /* Larger card layout for care products */
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                             {items.map(item => (
-                                                <div key={item.id} className="group bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500">
+                                                <div key={item.id} className="scroll-reveal group bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover-glow">
                                                     <div className="bg-gradient-to-br from-gray-900 to-gray-700 p-8 flex items-center justify-center aspect-[16/9]">
                                                         <ShoppingBag className="w-16 h-16 text-white/30" />
                                                     </div>
@@ -138,8 +157,9 @@ export function Produtos() {
                 )}
 
                 {/* Footer CTA */}
-                <div className="mt-20 bg-emerald-500 rounded-[2.5rem] p-10 text-white text-center relative overflow-hidden shadow-2xl shadow-emerald-500/20">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                <div className="mt-20 bg-emerald-500 rounded-[2.5rem] p-10 text-white text-center relative overflow-hidden shadow-2xl shadow-emerald-500/20 scroll-reveal-scale animate-gradient bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-500">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-blob" />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl animate-blob" style={{ animationDelay: '3s' }} />
                     <div className="relative z-10">
                         <h3 className="text-2xl font-bold mb-4 text-emerald-50">Gostou de algum produto?</h3>
                         <p className="text-emerald-50 mb-8 max-w-xl mx-auto">
