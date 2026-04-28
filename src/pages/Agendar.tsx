@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAgendamentos } from '@/hooks/useAgendamentos'
@@ -62,6 +62,13 @@ export function Agendar() {
     } | null>(null)
     const [step, setStep] = useState<'service' | 'datetime' | 'review'>('service')
 
+    // Pre-fill name from metadata if logged in
+    useEffect(() => {
+        if (user?.user_metadata?.full_name && !nomeCliente) {
+            setNomeCliente(user.user_metadata.full_name)
+        }
+    }, [user, nomeCliente])
+
     const handleEmailLogin = useCallback(async () => {
         if (!email) return
         setIsLoggingIn(true)
@@ -96,7 +103,7 @@ export function Agendar() {
 
     const handleConfirmBooking = useCallback(async () => {
         if (!selectedDate || !selectedTime || !selectedService || !whatsapp) return
-        if (!user && !nomeCliente) {
+        if (!nomeCliente) {
             toast.error('❌ Por favor, informe seu nome.')
             return
         }
@@ -423,18 +430,16 @@ export function Agendar() {
                             </div>
 
                             <div className="space-y-4 pt-2">
-                                {!user && (
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-gray-700 ml-1">Seu Nome Completo</label>
-                                        <Input
-                                            type="text"
-                                            placeholder="Ex: João Silva"
-                                            value={nomeCliente}
-                                            onChange={(e) => setNomeCliente(e.target.value)}
-                                            className="h-14 rounded-2xl text-lg border-2 focus:ring-emerald-500"
-                                        />
-                                    </div>
-                                )}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 ml-1">Seu Nome Completo</label>
+                                    <Input
+                                        type="text"
+                                        placeholder="Ex: João Silva"
+                                        value={nomeCliente}
+                                        onChange={(e) => setNomeCliente(e.target.value)}
+                                        className="h-14 rounded-2xl text-lg border-2 focus:ring-emerald-500"
+                                    />
+                                </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700 ml-1">Seu WhatsApp</label>
                                     <Input
@@ -457,7 +462,7 @@ export function Agendar() {
                                 </Button>
                                 <Button
                                     onClick={() => setShowConfirmDialog(true)}
-                                    disabled={!whatsapp || (!user && !nomeCliente)}
+                                    disabled={!whatsapp || !nomeCliente}
                                     className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-lg font-bold transition-all duration-300 hover:scale-[1.02] shadow-xl shadow-emerald-500/25 disabled:opacity-50"
                                 >
                                     Confirmar Agora
@@ -586,12 +591,10 @@ export function Agendar() {
                             <span className="text-gray-500">Horário</span>
                             <span className="font-bold text-emerald-600 text-2xl">{selectedTime}</span>
                         </div>
-                        {!user && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-500">Nome</span>
-                                <span className="font-bold text-gray-800">{nomeCliente}</span>
-                            </div>
-                        )}
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-500">Nome</span>
+                            <span className="font-bold text-gray-800">{nomeCliente}</span>
+                        </div>
                         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                             <span className="text-gray-500">Total</span>
                             <span className="font-black text-emerald-500 text-2xl">{selectedServiceData?.price}</span>
