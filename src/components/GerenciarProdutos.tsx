@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useProdutos, type Produto } from '@/hooks/useProdutos'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,6 +22,7 @@ import {
     AlertTriangle,
     Check,
     X,
+    Image as ImageIcon
 } from 'lucide-react'
 
 const categorias = [
@@ -45,10 +47,16 @@ export function GerenciarProdutos() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState(emptyForm)
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+    const [imagemFile, setImagemFile] = useState<File | null>(null)
+    const [imagemPreview, setImagemPreview] = useState<string | null>(null)
+    const [isUploading, setIsUploading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     const openNewForm = () => {
         setForm(emptyForm)
         setEditingId(null)
+        setImagemFile(null)
+        setImagemPreview(null)
         setShowForm(true)
     }
 
@@ -62,7 +70,21 @@ export function GerenciarProdutos() {
             ativo: produto.ativo,
         })
         setEditingId(produto.id)
+        setImagemFile(null)
+        setImagemPreview(produto.imagem_url || null)
         setShowForm(true)
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('❌ A imagem deve ter no máximo 5MB')
+                return
+            }
+            setImagemFile(file)
+            setImagemPreview(URL.createObjectURL(file))
+        }
     }
 
     const handleSubmit = async () => {
@@ -72,6 +94,29 @@ export function GerenciarProdutos() {
         }
 
         try {
+            setIsUploading(true)
+            let uploadedImageUrl = imagemPreview // Mantém a URL existente se não houver novo arquivo
+
+            if (imagemFile) {
+                const fileExt = imagemFile.name.split('.').pop()
+                const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+                const filePath = `${fileName}`
+
+                const { error: uploadError } = await supabase.storage
+                    .from('produtos')
+                    .upload(filePath, imagemFile)
+
+                if (uploadError) {
+                    throw new Error('Erro ao fazer upload da imagem.')
+                }
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('produtos')
+                    .getPublicUrl(filePath)
+                
+                uploadedImageUrl = publicUrl
+            }
+
             const payload = {
                 nome: form.nome.trim(),
                 descricao: form.descricao.trim() || null,
@@ -79,6 +124,7 @@ export function GerenciarProdutos() {
                 estoque: parseInt(form.estoque) || 0,
                 categoria: form.categoria,
                 ativo: form.ativo,
+                imagem_url: uploadedImageUrl,
             }
 
             if (editingId) {
@@ -92,8 +138,12 @@ export function GerenciarProdutos() {
             setShowForm(false)
             setForm(emptyForm)
             setEditingId(null)
+            setImagemFile(null)
+            setImagemPreview(null)
         } catch {
             toast.error('❌ Erro ao salvar produto.')
+        } finally {
+            setIsUploading(false)
         }
     }
 
@@ -253,7 +303,47 @@ export function GerenciarProdutos() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 pt-4">
+                    <div className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto px-2">
+                        {/* Imagem Upload */}
+                        <div className="flex flex-col items-center gap-3">
+                            <div 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-32 h-32 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all overflow-hidden relative group"
+                            >
+                                {imagemPreview ? (
+                                    <>
+                                        <img src={imagemPreview} alt="Preview" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Pencil className="w-6 h-6 text-white" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ImageIcon className="w-8 h-8 text-gray-400 mb-2 group-hover:text-emerald-500" />
+                                        <span className="text-xs font-bold text-gray-500 group-hover:text-emerald-600">Adicionar Foto</span>
+                                    </>
+                                )}
+                            </div>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileChange} 
+                                accept="image/*" 
+                                className="hidden" 
+                            />
+                            {imagemPreview && (
+                                <button 
+                                    onClick={() => {
+                                        setImagemFile(null)
+                                        setImagemPreview(null)
+                                    }}
+                                    className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1"
+                                >
+                                    <Trash2 className="w-3 h-3" /> Remover Foto
+                                </button>
+                            )}
+                        </div>
+
                         <div className="space-y-1">
                             <label className="text-sm font-bold text-gray-700">Nome do Produto *</label>
                             <Input
@@ -333,7 +423,7 @@ export function GerenciarProdutos() {
                                 disabled={createProduto.isPending || updateProduto.isPending}
                                 className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20"
                             >
-                                {(createProduto.isPending || updateProduto.isPending) ? 'Salvando...' : editingId ? 'Atualizar' : 'Adicionar'}
+                                {(isUploading || createProduto.isPending || updateProduto.isPending) ? 'Salvando...' : editingId ? 'Atualizar' : 'Adicionar'}
                             </Button>
                         </div>
                     </div>

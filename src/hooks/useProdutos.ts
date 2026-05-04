@@ -9,6 +9,7 @@ export interface Produto {
     estoque: number
     categoria: string
     ativo: boolean
+    imagem_url?: string | null
     created_at: string
     updated_at: string
 }

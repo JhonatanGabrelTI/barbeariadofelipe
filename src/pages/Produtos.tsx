@@ -103,6 +103,11 @@ export function Produtos() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                             {items.map(item => (
                                                 <div key={item.id} className="scroll-reveal bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-2 hover-glow">
+                                                    {item.imagem_url && (
+                                                        <div className="w-full aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
+                                                            <img src={item.imagem_url} alt={item.nome} className="w-full h-full object-cover mix-blend-multiply" />
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-center justify-between mb-2">
                                                         <h3 className="font-bold text-gray-800">{item.nome}</h3>
                                                         <span className="text-emerald-500 font-bold">
@@ -130,8 +135,14 @@ export function Produtos() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                             {items.map(item => (
                                                 <div key={item.id} className="scroll-reveal group bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover-glow">
-                                                    <div className="bg-gradient-to-br from-gray-900 to-gray-700 p-8 flex items-center justify-center aspect-[16/9]">
-                                                        <ShoppingBag className="w-16 h-16 text-white/30" />
+                                                    <div className="bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center aspect-[4/3] relative overflow-hidden border-b border-gray-100">
+                                                        {item.imagem_url ? (
+                                                            <img src={item.imagem_url} alt={item.nome} className="absolute inset-0 w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+                                                        ) : (
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+                                                                <ShoppingBag className="w-16 h-16 text-white/30 relative z-10" />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="p-8">
                                                         <div className="flex items-center justify-between mb-3">
