@@ -11,6 +11,8 @@ const categoryLabels: Record<string, string> = {
     geral: 'Outros Produtos',
 }
 
+const WHATSAPP_NUMBER = '5543998648935'
+
 const categoryIcons: Record<string, typeof Coffee> = {
     bebida: Coffee,
     cabelo: ShoppingBag,
@@ -21,6 +23,15 @@ const categoryIcons: Record<string, typeof Coffee> = {
 export function Produtos() {
     const { produtos, isLoading } = useProdutos()
     const scrollRef = useRef<HTMLDivElement>(null)
+
+    const handleWhatsAppClick = (productName?: string) => {
+        const message = productName
+            ? `Olá! Vi o produto *${productName}* no site da *Felipe Barbearia* e gostaria de consultar a disponibilidade.`
+            : 'Olá! Vi os produtos no site da *Felipe Barbearia* e gostaria de mais informações.'
+
+        const encodedMessage = encodeURIComponent(message)
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank')
+    }
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -142,7 +153,10 @@ export function Produtos() {
                                                                 </li>
                                                             )}
                                                         </ul>
-                                                        <Button className="w-full h-12 bg-gray-900 border-2 border-gray-900 text-white rounded-xl font-bold group-hover:bg-transparent group-hover:text-gray-900 transition-all duration-300">
+                                                        <Button 
+                                                            onClick={() => handleWhatsAppClick(item.nome)}
+                                                            className="w-full h-12 bg-gray-900 border-2 border-gray-900 text-white rounded-xl font-bold group-hover:bg-transparent group-hover:text-gray-900 transition-all duration-300"
+                                                        >
                                                             Adquirir na Barbearia
                                                         </Button>
                                                     </div>
@@ -165,7 +179,10 @@ export function Produtos() {
                         <p className="text-emerald-50 mb-8 max-w-xl mx-auto">
                             Consulte a disponibilidade em estoque no dia do seu atendimento ou peça diretamente para o seu barbeiro.
                         </p>
-                        <Button className="bg-white text-emerald-600 hover:bg-emerald-50 px-10 h-14 rounded-2xl font-black text-lg shadow-xl shadow-black/10">
+                        <Button 
+                            onClick={() => handleWhatsAppClick()}
+                            className="bg-white text-emerald-600 hover:bg-emerald-50 px-10 h-14 rounded-2xl font-black text-lg shadow-xl shadow-black/10"
+                        >
                             Falar no WhatsApp
                         </Button>
                     </div>

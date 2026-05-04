@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner'
 import { format, addDays, addMinutes, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info } from 'lucide-react'
+import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info, Phone } from 'lucide-react'
 
 const defaultServices = [
     { id: 'corte-cabelo', name: 'Corte de Cabelo', price: 'R$ 35', duration: 30 },
@@ -27,7 +27,7 @@ const defaultServices = [
     { id: 'cabelo-barba', name: 'Cabelo e Barba', price: 'R$ 65', duration: 50 },
     { id: 'sobrancelhas', name: 'Sobrancelhas', price: 'R$ 15', duration: 10 },
     { id: 'cabelo-sobrancelhas', name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: 35 },
-    { id: 'cabelo-barba-sobrancelhas', name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: 55 },
+    { id: 'cabelo-barba-sobrancelhas', name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: 70 },
 ]
 
 const timeSlots = [
@@ -37,6 +37,8 @@ const timeSlots = [
     '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
     '19:00', '19:30',
 ]
+
+const WHATSAPP_NUMBER = '5543998648935'
 
 export function Agendar() {
     const { user, loading: authLoading, signInWithEmail, signInWithGoogle } = useAuth()
@@ -716,10 +718,21 @@ export function Agendar() {
                         <p className="text-gray-800 font-medium">📅 {lastBookingDetails?.date} às {lastBookingDetails?.time}</p>
                     </div>
 
-                    <div className="space-y-4 pt-4">
+                    <div className="space-y-3 pt-4">
+                        <Button
+                            onClick={() => {
+                                const message = `Olá! Acabei de agendar um(a) *${lastBookingDetails?.service}* para o dia *${lastBookingDetails?.date}* às *${lastBookingDetails?.time}*. Gostaria de confirmar!`
+                                window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank')
+                            }}
+                            className="w-full h-14 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-2xl text-lg font-bold shadow-lg shadow-green-500/20 flex items-center justify-center gap-2"
+                        >
+                            <Phone className="w-5 h-5" />
+                            CONFIRMAR NO WHATSAPP
+                        </Button>
                         <Button
                             onClick={() => setShowSuccessDialog(false)}
-                            className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-lg font-bold shadow-lg shadow-emerald-500/20"
+                            variant="ghost"
+                            className="w-full h-12 text-gray-500 font-medium"
                         >
                             OK, ENTENDI
                         </Button>
