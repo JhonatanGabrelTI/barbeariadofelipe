@@ -159,8 +159,8 @@ export function Agendar() {
 
             // Note: We don't clear the fields yet so they can be used for the WhatsApp message
             // They will be cleared when the success dialog is closed
-        } catch {
-            toast.error('❌ Erro ao agendar. Por favor, tente novamente.')
+        } catch (error: any) {
+            toast.error(error.message || '❌ Erro ao agendar. Por favor, tente novamente.')
         } finally {
             setIsBooking(false)
         }
