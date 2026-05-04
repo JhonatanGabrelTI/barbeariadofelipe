@@ -31,21 +31,24 @@ export function useAgendamentos() {
             nome_cliente?: string
             duracao_minutos?: number
         }) => {
-            const { data: result, error } = await supabase
-                .from('agendamentos')
-                .insert({
-                    user_id: user?.id || null,
-                    nome_cliente: data.nome_cliente || user?.user_metadata?.full_name || null,
-                    whatsapp: data.whatsapp,
-                    servico: data.servico,
-                    data_hora: data.data_hora,
-                    duracao_minutos: data.duracao_minutos || 30,
-                    status: 'confirmado',
-                })
-                .select()
-                .single()
+            const payload = {
+                p_user_id: user?.id || null,
+                p_nome_cliente: data.nome_cliente || user?.user_metadata?.full_name || null,
+                p_whatsapp: data.whatsapp,
+                p_servico: data.servico,
+                p_data_hora: data.data_hora,
+                p_duracao_minutos: data.duracao_minutos || 30,
+            }
+
+            const { data: result, error } = await supabase.rpc('agendar_horario_seguro', payload)
+
             if (error) throw error
-            return result as Agendamento
+
+            if (result && !result.success) {
+                throw new Error(result.message || 'Horário indisponível.')
+            }
+
+            return result.data as Agendamento
         },
         onSuccess: () => {
             // Invalidate ALL related queries immediately

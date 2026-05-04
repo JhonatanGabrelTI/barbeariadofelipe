@@ -401,6 +401,7 @@ export function Agendar() {
                                                         const blockReason = getSlotBlockReason(time)
                                                         const isBlocked = blockReason !== null
                                                         const isNextOccupied = blockReason === 'next-occupied'
+                                                        const isExceedsHours = blockReason === 'exceeds-hours'
 
                                                         return (
                                                             <button
@@ -410,14 +411,18 @@ export function Agendar() {
                                                                 title={
                                                                     isNextOccupied
                                                                         ? `Seu serviço dura ${selectedServiceData?.duration}min e o próximo horário já está ocupado`
+                                                                        : isExceedsHours
+                                                                        ? `O serviço passaria do horário de fechamento`
                                                                         : undefined
                                                                 }
                                                                 className={[
                                                                     'h-16 rounded-2xl border-2 text-lg font-bold transition-all duration-200',
                                                                     isNextOccupied
                                                                         ? 'border-amber-200 bg-amber-50 text-amber-500 cursor-not-allowed'
-                                                                        : isBlocked
-                                                                            ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
+                                                                        : isExceedsHours
+                                                                            ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                                                                            : isBlocked
+                                                                                ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
                                                                             : selectedTime === time
                                                                                 ? 'border-emerald-500 bg-emerald-500 text-white shadow-xl scale-105'
                                                                                 : 'border-gray-100 bg-white text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 hover:scale-110 active:scale-95'
@@ -427,6 +432,11 @@ export function Agendar() {
                                                                     <span className="flex flex-col items-center justify-center text-[9px] uppercase tracking-tighter leading-tight px-1">
                                                                         <AlertTriangle className="w-4 h-4 mb-0.5" />
                                                                         <span>Próx. ocupado</span>
+                                                                    </span>
+                                                                ) : isExceedsHours ? (
+                                                                    <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
+                                                                        <Clock className="w-4 h-4 mb-0.5" />
+                                                                        Sem tempo
                                                                     </span>
                                                                 ) : isBlocked ? (
                                                                     <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
