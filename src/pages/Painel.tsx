@@ -9,6 +9,15 @@ import { WhatsAppConfig } from '@/components/WhatsAppConfig'
 import { GerenciarProdutos } from '@/components/GerenciarProdutos'
 import { ConfigurarServicos } from '@/components/ConfigurarServicos'
 import { Financeiro } from '@/components/Financeiro'
+import { useBlockedClients } from '@/hooks/useBlockedClients'
+import { Input } from '@/components/ui/input'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { format, isToday, isTomorrow, isPast, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -32,11 +41,15 @@ import {
     EyeOff,
     Package,
     Settings2,
+    Ban,
+    Trash2,
+    Search,
+    UserX,
 } from 'lucide-react'
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
-type Tab = 'agendamentos' | 'horarios' | 'servicos' | 'config' | 'produtos' | 'financeiro'
+type Tab = 'agendamentos' | 'clientes' | 'bloqueados' | 'horarios' | 'servicos' | 'config' | 'produtos' | 'financeiro'
 
 export function Painel() {
     const { user, loading: authLoading, signInWithEmail, signInWithPassword, signOut } = useAuth()
@@ -49,6 +62,75 @@ export function Painel() {
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('todos')
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('hoje')
     const [activeTab, setActiveTab] = useState<Tab>('agendamentos')
+
+    // Blocked clients hook and states
+    const { blockedClients, isLoading: isLoadingBlocked, blockClient, unblockClient } = useBlockedClients()
+    const [blockingClient, setBlockingClient] = useState<{ whatsapp: string; nome: string } | null>(null)
+    const [blockReason, setBlockReason] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
+    const [manualWhatsapp, setManualWhatsapp] = useState('')
+    const [manualNome, setManualNome] = useState('')
+    const [showManualBlockModal, setShowManualBlockModal] = useState(false)
+
+    // Memoized unique clients list compiled from all appointments
+    const uniqueClients = useMemo(() => {
+        const clientMap = new Map<string, {
+            whatsapp: string;
+            nome: string;
+            totalAgendamentos: number;
+            ultimoAgendamento: string;
+            status: 'ativo' | 'bloqueado';
+            bloqueioId?: string;
+            motivoBloqueio?: string;
+        }>();
+
+        allAgendamentos.forEach(a => {
+            const cleanPhone = a.whatsapp.replace(/\D/g, '');
+            if (!cleanPhone) return;
+
+            const existing = clientMap.get(cleanPhone);
+            const appointmentDate = new Date(a.data_hora);
+
+            const isBlocked = blockedClients.some(bc => bc.whatsapp === cleanPhone);
+            const bloqueio = blockedClients.find(bc => bc.whatsapp === cleanPhone);
+
+            if (!existing) {
+                clientMap.set(cleanPhone, {
+                    whatsapp: a.whatsapp,
+                    nome: a.nome_cliente || 'Sem nome',
+                    totalAgendamentos: 1,
+                    ultimoAgendamento: a.data_hora,
+                    status: isBlocked ? 'bloqueado' : 'ativo',
+                    bloqueioId: bloqueio?.id,
+                    motivoBloqueio: bloqueio?.motivo || undefined
+                });
+            } else {
+                existing.totalAgendamentos += 1;
+                if (a.nome_cliente && (!existing.nome || existing.nome === 'Sem nome')) {
+                    existing.nome = a.nome_cliente;
+                }
+                if (new Date(existing.ultimoAgendamento) < appointmentDate) {
+                    existing.ultimoAgendamento = a.data_hora;
+                    if (a.nome_cliente) {
+                        existing.nome = a.nome_cliente;
+                    }
+                }
+            }
+        });
+
+        return Array.from(clientMap.values()).sort((a, b) => b.totalAgendamentos - a.totalAgendamentos);
+    }, [allAgendamentos, blockedClients]);
+
+    // Search and filter clients
+    const filteredClients = useMemo(() => {
+        return uniqueClients.filter(c => {
+            const query = searchTerm.toLowerCase();
+            return (
+                c.nome.toLowerCase().includes(query) ||
+                c.whatsapp.includes(query)
+            );
+        });
+    }, [uniqueClients, searchTerm]);
 
     const filteredAgendamentos = useMemo(() => {
         let filtered = [...allAgendamentos]
@@ -133,6 +215,26 @@ export function Painel() {
         const whatsappUrl = `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`
 
         window.open(whatsappUrl, '_blank')
+    }
+
+    const handleBlockClient = async (whatsapp: string, nome: string, motivo: string) => {
+        try {
+            await blockClient.mutateAsync({ whatsapp, nome, motivo })
+            toast.success('🔒 Cliente bloqueado com sucesso!')
+            setBlockingClient(null)
+            setBlockReason('')
+        } catch (error: any) {
+            toast.error(error.message || '❌ Erro ao bloquear cliente.')
+        }
+    }
+
+    const handleUnblockClient = async (id: string) => {
+        try {
+            await unblockClient.mutateAsync(id)
+            toast.success('🔓 Cliente desbloqueado com sucesso!')
+        } catch {
+            toast.error('❌ Erro ao desbloquear cliente.')
+        }
     }
 
     // Loading
@@ -382,6 +484,30 @@ export function Painel() {
                         Agendamentos
                     </button>
                     <button
+                        onClick={() => setActiveTab('clientes')}
+                        className={[
+                            'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
+                            activeTab === 'clientes'
+                                ? 'bg-white text-gray-800 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        ].join(' ')}
+                    >
+                        <Users className="w-4 h-4" />
+                        Clientes
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('bloqueados')}
+                        className={[
+                            'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
+                            activeTab === 'bloqueados'
+                                ? 'bg-white text-gray-800 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        ].join(' ')}
+                    >
+                        <UserX className="w-4 h-4" />
+                        Bloqueados
+                    </button>
+                    <button
                         onClick={() => setActiveTab('horarios')}
                         className={[
                             'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
@@ -454,6 +580,219 @@ export function Painel() {
                     <GerenciarProdutos />
                 ) : activeTab === 'financeiro' ? (
                     <Financeiro allAgendamentos={allAgendamentos} servicePrices={servicePrices} />
+                ) : activeTab === 'clientes' ? (
+                    <div className="space-y-6">
+                        {/* Search and Title */}
+                        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Histórico de Clientes</h2>
+                                <p className="text-sm text-gray-500">Lista de todos os clientes que já realizaram agendamento no sistema.</p>
+                            </div>
+                            <div className="relative w-full md:w-80">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    type="text"
+                                    placeholder="Buscar por nome ou WhatsApp..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10 h-11 border-gray-200 focus:border-violet-500 focus:ring-violet-500 rounded-xl"
+                                />
+                            </div>
+                        </div>
+
+                        {/* List */}
+                        {isLoading ? (
+                            <div className="space-y-3">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-20 rounded-2xl" />
+                                ))}
+                            </div>
+                        ) : filteredClients.length === 0 ? (
+                            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                                <Users className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-500 mb-1">Nenhum cliente encontrado</h3>
+                                <p className="text-gray-400 text-sm">Tente buscar por outro nome ou número de telefone.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {filteredClients.map((client) => {
+                                    const rawPhone = client.whatsapp.replace(/\D/g, '')
+                                    const chatUrl = `https://wa.me/55${rawPhone}`
+                                    const formattedDate = format(new Date(client.ultimoAgendamento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+
+                                    return (
+                                        <div
+                                            key={client.whatsapp}
+                                            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:border-gray-200 transition-all flex flex-col justify-between gap-4"
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                {/* Avatar */}
+                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                                                    client.status === 'bloqueado' ? 'bg-red-50 text-red-500' : 'bg-violet-50 text-violet-600'
+                                                }`}>
+                                                    <Users className="w-5 h-5" />
+                                                </div>
+
+                                                {/* Details */}
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <h3 className="font-bold text-gray-800">{client.nome}</h3>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                                            client.status === 'bloqueado'
+                                                                ? 'bg-red-100 text-red-700'
+                                                                : 'bg-emerald-100 text-emerald-700'
+                                                        }`}>
+                                                            {client.status === 'bloqueado' ? 'Bloqueado' : 'Ativo'}
+                                                        </span>
+                                                    </div>
+                                                    <a
+                                                        href={chatUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 transition-colors font-medium"
+                                                    >
+                                                        <Phone className="w-3.5 h-3.5" />
+                                                        <span>{client.whatsapp}</span>
+                                                    </a>
+                                                    <div className="text-xs text-gray-400 space-y-0.5 mt-2">
+                                                        <p>Total de Agendamentos: <strong className="text-gray-700">{client.totalAgendamentos}</strong></p>
+                                                        <p>Último em: {formattedDate}</p>
+                                                        {client.motivoBloqueio && (
+                                                            <p className="text-red-500 font-medium">Motivo: {client.motivoBloqueio}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Button */}
+                                            <div className="flex justify-end gap-2 border-t border-gray-50 pt-3">
+                                                {client.status === 'bloqueado' ? (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleUnblockClient(client.bloqueioId!)}
+                                                        className="text-xs rounded-xl h-9 text-emerald-600 border-emerald-100 hover:bg-emerald-50"
+                                                    >
+                                                        Desbloquear Cliente
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => setBlockingClient({
+                                                            whatsapp: client.whatsapp,
+                                                            nome: client.nome
+                                                        })}
+                                                        className="text-xs rounded-xl h-9 text-red-600 border-red-100 hover:bg-red-50 hover:border-red-200"
+                                                    >
+                                                        <Ban className="w-3.5 h-3.5 mr-1" />
+                                                        Bloquear Cliente
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                ) : activeTab === 'bloqueados' ? (
+                    <div className="space-y-6">
+                        {/* Title and Add Button */}
+                        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Clientes Bloqueados</h2>
+                                <p className="text-sm text-gray-500">Gerencie a lista de números impedidos de agendar no site.</p>
+                            </div>
+                            <Button
+                                onClick={() => {
+                                    setManualWhatsapp('')
+                                    setManualNome('')
+                                    setBlockReason('')
+                                    setShowManualBlockModal(true)
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200 gap-2 h-11 px-5 transition-all hover:scale-105 active:scale-95 text-sm shrink-0"
+                            >
+                                <Ban className="w-4 h-4" />
+                                Bloquear Novo Número
+                            </Button>
+                        </div>
+
+                        {/* List */}
+                        {isLoadingBlocked ? (
+                            <div className="space-y-3">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-20 rounded-2xl" />
+                                ))}
+                            </div>
+                        ) : blockedClients.length === 0 ? (
+                            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                                <UserX className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-500 mb-1">Nenhum número bloqueado</h3>
+                                <p className="text-gray-400 text-sm">Todos os seus clientes estão ativos e autorizados a agendar.</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse font-sans">
+                                        <thead>
+                                            <tr className="bg-gray-50 border-b border-gray-100">
+                                                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
+                                                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">WhatsApp</th>
+                                                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Motivo do Bloqueio</th>
+                                                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bloqueado em</th>
+                                                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {blockedClients.map((client) => {
+                                                const formattedDate = format(new Date(client.created_at), "dd/MM/yyyy", { locale: ptBR })
+                                                const chatUrl = `https://wa.me/55${client.whatsapp.replace(/\D/g, '')}`
+
+                                                return (
+                                                    <tr key={client.id} className="hover:bg-gray-50/50 transition-colors">
+                                                        <td className="p-4">
+                                                            <div className="font-semibold text-gray-800">{client.nome || 'Sem Nome'}</div>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <a
+                                                                href={chatUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-emerald-600 transition-colors font-medium"
+                                                            >
+                                                                <Phone className="w-3.5 h-3.5" />
+                                                                <span>{client.whatsapp}</span>
+                                                            </a>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <span className="text-sm text-gray-600 italic">
+                                                                {client.motivo || 'Nenhum motivo especificado'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-sm text-gray-400">
+                                                            {formattedDate}
+                                                        </td>
+                                                        <td className="p-4 text-right text-xs">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => handleUnblockClient(client.id)}
+                                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl px-3 h-9"
+                                                            >
+                                                                <Trash2 className="w-4 h-4 mr-1" />
+                                                                Desbloquear
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <>
                         {/* Filters */}
@@ -621,6 +960,18 @@ export function Painel() {
                                                                 <XCircle className="w-3.5 h-3.5 mr-1" />
                                                                 Cancelar
                                                             </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => setBlockingClient({
+                                                                    whatsapp: agendamento.whatsapp,
+                                                                    nome: agendamento.nome_cliente || ''
+                                                                })}
+                                                                className="rounded-lg text-xs h-8 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                                                            >
+                                                                <Ban className="w-3.5 h-3.5 mr-1" />
+                                                                Bloquear
+                                                            </Button>
                                                         </>
                                                     )}
                                                 </div>
@@ -633,6 +984,157 @@ export function Painel() {
                     </>
                 )}
             </div>
+
+            {/* Modal de Bloqueio Rápido / Confirmação */}
+            <Dialog open={blockingClient !== null} onOpenChange={(open) => !open && setBlockingClient(null)}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <Ban className="w-5 h-5" />
+                            Bloquear Cliente?
+                        </DialogTitle>
+                        <DialogDescription>
+                            Isso impedirá que o cliente realize novos agendamentos no site pelo número de WhatsApp informado.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {blockingClient && (
+                        <div className="space-y-4 py-3 font-sans">
+                            <div className="bg-gray-50 p-4 rounded-xl space-y-1.5 text-sm text-gray-600 border border-gray-100">
+                                <p><strong>Nome:</strong> {blockingClient.nome || 'Sem Nome'}</p>
+                                <p><strong>WhatsApp:</strong> {blockingClient.whatsapp}</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Motivo do Bloqueio (Opcional)
+                                </label>
+                                <Input
+                                    placeholder="Ex: Faltou sem avisar, grosseria..."
+                                    value={blockReason}
+                                    onChange={(e) => setBlockReason(e.target.value)}
+                                    className="h-11 rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex gap-3 justify-end mt-4">
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setBlockingClient(null)
+                                setBlockReason('')
+                            }}
+                            className="rounded-xl h-11 text-gray-500 font-medium"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                if (blockingClient) {
+                                    handleBlockClient(blockingClient.whatsapp, blockingClient.nome, blockReason)
+                                }
+                            }}
+                            disabled={blockClient.isPending}
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl h-11 px-5 shadow-lg shadow-red-200"
+                        >
+                            {blockClient.isPending ? 'Bloqueando...' : 'Confirmar Bloqueio'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal de Bloqueio Manual */}
+            <Dialog open={showManualBlockModal} onOpenChange={setShowManualBlockModal}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <Ban className="w-5 h-5" />
+                            Bloquear Novo Número
+                        </DialogTitle>
+                        <DialogDescription>
+                            Cadastre manualmente um número de WhatsApp que você deseja impedir de agendar no site.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-3 font-sans">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                WhatsApp (apenas números com DDD)
+                            </label>
+                            <Input
+                                placeholder="Ex: 43999999999"
+                                value={manualWhatsapp}
+                                onChange={(e) => setManualWhatsapp(e.target.value)}
+                                className="h-11 rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Nome do Cliente (Opcional)
+                            </label>
+                            <Input
+                                placeholder="Ex: João da Silva"
+                                value={manualNome}
+                                onChange={(e) => setManualNome(e.target.value)}
+                                className="h-11 rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Motivo do Bloqueio (Opcional)
+                            </label>
+                            <Input
+                                placeholder="Ex: Cliente problemático, caloteiro..."
+                                value={blockReason}
+                                onChange={(e) => setBlockReason(e.target.value)}
+                                className="h-11 rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 justify-end mt-4">
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setShowManualBlockModal(false)
+                                setManualWhatsapp('')
+                                setManualNome('')
+                                setBlockReason('')
+                            }}
+                            className="rounded-xl h-11 text-gray-500 font-medium"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={async () => {
+                                if (!manualWhatsapp.trim()) {
+                                    toast.error('❌ Por favor, digite o número do WhatsApp.')
+                                    return
+                                }
+                                try {
+                                    await blockClient.mutateAsync({
+                                        whatsapp: manualWhatsapp,
+                                        nome: manualNome,
+                                        motivo: blockReason
+                                    })
+                                    toast.success('🔒 Número bloqueado com sucesso!')
+                                    setShowManualBlockModal(false)
+                                    setManualWhatsapp('')
+                                    setManualNome('')
+                                    setBlockReason('')
+                                } catch (error: any) {
+                                    toast.error(error.message || '❌ Erro ao bloquear número.')
+                                }
+                            }}
+                            disabled={blockClient.isPending}
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl h-11 px-5 shadow-lg shadow-red-200"
+                        >
+                            {blockClient.isPending ? 'Bloqueando...' : 'Confirmar Bloqueio'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
