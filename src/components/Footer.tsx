@@ -102,9 +102,27 @@ export function Footer() {
                     <p className="text-gray-500 text-sm flex items-center gap-1.5">
                         © {new Date().getFullYear()} Felipe Barbearia. Feito com <Heart className="w-3.5 h-3.5 text-emerald-500/60 fill-emerald-500/60" /> em Ibaiti-PR
                     </p>
-                    <p className="text-gray-600 text-xs">
-                        Todos os direitos reservados
-                    </p>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4 text-xs">
+                        <p className="text-gray-600">
+                            Todos os direitos reservados
+                        </p>
+                        <span className="text-gray-800 hidden sm:inline">|</span>
+                        <div className="flex items-center gap-1.5 text-gray-500">
+                            <span>Desenvolvido por</span>
+                            <a
+                                href="https://github.com/JhonatanGabrelTI"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-bold tracking-wide bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite] bg-clip-text text-transparent hover:scale-105 transition-all duration-300 flex items-center gap-1 group cursor-pointer"
+                            >
+                                <span className="relative">
+                                    Jhonatan Proença
+                                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-300 group-hover:w-full"></span>
+                                </span>
+                                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5 text-[11px] filter drop-shadow-[0_0_2px_rgba(20,184,166,0.4)]">🚀</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>

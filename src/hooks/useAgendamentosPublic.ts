@@ -37,6 +37,7 @@ export function useAgendamentosPublic(date?: string) {
         queryFn: async () => {
             if (!date) return []
 
+            // Query a wide UTC window; timezone filtering is handled correctly in JS comparisons
             const startOfDay = `${date}T00:00:00.000Z`
             const endOfDay = `${date}T23:59:59.999Z`
 
@@ -51,7 +52,9 @@ export function useAgendamentosPublic(date?: string) {
             return data as Partial<Agendamento>[]
         },
         enabled: !!date,
-        staleTime: 1000 * 10, // 10 seconds (was 1 min) — Realtime handles instant updates
-        refetchInterval: 1000 * 30, // Also poll every 30s as fallback
+        staleTime: 0,                   // Always consider data stale — never serve from cache
+        refetchInterval: 1000 * 10,     // Poll every 10 seconds as fallback (was 30s)
+        refetchOnWindowFocus: true,     // Refetch when user returns to tab
+        refetchOnMount: 'always',       // Always refetch when component mounts
     })
 }

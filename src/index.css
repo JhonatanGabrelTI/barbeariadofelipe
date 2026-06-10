@@ -539,3 +539,107 @@
 .section-transition {
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
+
+/* ═══════════════════════════════════════
+   SLOT & BOOKING PAGE EFFECTS
+   ═══════════════════════════════════════ */
+
+/* Slot shimmer sweep */
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(16,185,129,0.12) 50%, transparent 100%);
+  animation: shimmer-sweep 2s ease-in-out infinite;
+}
+
+/* Slow spin for sync icon */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Available slot glow pulse */
+@keyframes slot-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+  50%       { box-shadow: 0 0 12px 2px rgba(16,185,129,0.18); }
+}
+
+.slot-available:hover {
+  animation: slot-glow-pulse 1.6s ease-in-out infinite;
+}
+
+/* Gradient text for booking page title */
+.text-gradient-emerald {
+  background: linear-gradient(135deg, #10B981 0%, #34D399 50%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Step connector pulse when active */
+@keyframes connector-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.connector-active {
+  animation: connector-fill 0.7s ease-out forwards;
+}
+
+/* Floating label animation */
+@keyframes float-label {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-2px); }
+}
+
+/* Success bounce ring */
+@keyframes success-ring {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+.animate-success-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(16,185,129,0.5);
+  animation: success-ring 1.2s ease-out forwards;
+}
+
+/* Sync badge shimmer */
+@keyframes badge-shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.sync-badge {
+  background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 50%, #ecfdf5 100%);
+  background-size: 200% auto;
+  animation: badge-shine 2s linear infinite;
+}
+
+/* Particle blob animation already exists (.animate-blob), but ensuring keyframes */
+@keyframes blob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25%       { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  50%       { border-radius: 50% 60% 30% 60% / 30% 40% 70% 60%; }
+  75%       { border-radius: 60% 30% 50% 40% / 70% 50% 40% 60%; }
+}

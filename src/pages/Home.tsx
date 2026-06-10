@@ -1,23 +1,44 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useServicos } from '@/hooks/useServicos'
-import { Phone, MapPin, Scissors, Star, Clock, Users, ChevronRight, Sparkles } from 'lucide-react'
+import { Phone, MapPin, Scissors, Star, Clock, Users, ChevronRight, Sparkles, ChevronDown, Shield, Zap, Award } from 'lucide-react'
 
 const defaultServices = [
-    { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors },
-    { name: 'Barba Completa', price: 'R$ 35', duration: '30 min', icon: Scissors },
-    { name: 'Cabelo e Barba', price: 'R$ 65', duration: '50 min', icon: Scissors, popular: true },
-    { name: 'Sobrancelhas', price: 'R$ 15', duration: '15 min', icon: Scissors },
-    { name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: '40 min', icon: Scissors },
-    { name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: '60 min', icon: Scissors },
+    { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-blue-500 to-blue-600' },
+    { name: 'Barba Completa', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-orange-500 to-orange-600' },
+    { name: 'Cabelo e Barba', price: 'R$ 65', duration: '50 min', icon: Scissors, popular: true, accent: 'from-emerald-500 to-emerald-600' },
+    { name: 'Sobrancelhas', price: 'R$ 15', duration: '15 min', icon: Scissors, accent: 'from-purple-500 to-purple-600' },
+    { name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: '40 min', icon: Scissors, accent: 'from-indigo-500 to-indigo-600' },
+    { name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: '60 min', icon: Scissors, accent: 'from-rose-500 to-rose-600' },
 ]
 
 const stats = [
-    { label: 'Clientes Satisfeitos', value: '2.000+', icon: Users },
-    { label: 'Anos de Experiência', value: '6+', icon: Clock },
-    { label: 'Avaliação Média', value: '4.9', icon: Star },
+    { label: 'Clientes Satisfeitos', value: '2.000+', numericValue: 2000, icon: Users, color: 'text-blue-500', bg: 'from-blue-100 to-blue-200/60', hoverBg: 'group-hover:from-blue-500 group-hover:to-blue-600' },
+    { label: 'Anos de Experiência', value: '6+', numericValue: 6, icon: Clock, color: 'text-emerald-600', bg: 'from-emerald-100 to-emerald-200/60', hoverBg: 'group-hover:from-emerald-500 group-hover:to-emerald-600' },
+    { label: 'Avaliação Média', value: '4.9', numericValue: 4.9, icon: Star, color: 'text-amber-500', bg: 'from-amber-100 to-amber-200/60', hoverBg: 'group-hover:from-amber-500 group-hover:to-amber-600' },
 ]
+
+// Animated number counter hook
+function useCountUp(target: number, duration = 1500, shouldStart = false) {
+    const [count, setCount] = useState(0)
+    useEffect(() => {
+        if (!shouldStart) return
+        const start = performance.now()
+        const isDecimal = target % 1 !== 0
+        const animate = (now: number) => {
+            const elapsed = now - start
+            const progress = Math.min(elapsed / duration, 1)
+            const eased = 1 - Math.pow(1 - progress, 3)
+            const current = eased * target
+            setCount(isDecimal ? Math.round(current * 10) / 10 : Math.floor(current))
+            if (progress < 1) requestAnimationFrame(animate)
+            else setCount(target)
+        }
+        requestAnimationFrame(animate)
+    }, [target, duration, shouldStart])
+    return count
+}
 
 function useScrollReveal() {
     const ref = useRef<HTMLDivElement>(null)
@@ -52,6 +73,7 @@ export function Home() {
             duration: `${s.duracao_minutos} min`,
             icon: Scissors,
             popular: s.popular,
+            accent: (s as any).accent || 'from-emerald-500 to-emerald-600'
         }))
         : defaultServices
 
@@ -134,30 +156,23 @@ export function Home() {
 
                 {/* Bottom gradient fade */}
                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
+
+                {/* Scroll indicator */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-bounce opacity-40">
+                    <span className="text-xs text-gray-400 font-medium uppercase tracking-widest">Scroll</span>
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
             </section>
 
             {/* ═══════════════ STATS SECTION ═══════════════ */}
             <section className="py-20 bg-gradient-to-b from-white via-emerald-50/30 to-white relative">
-                {/* Subtle side gradients */}
                 <div className="absolute left-0 top-0 bottom-0 w-1/4 bg-gradient-to-r from-emerald-50/50 to-transparent" />
                 <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-emerald-50/50 to-transparent" />
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                         {stats.map((stat, i) => (
-                            <div
-                                key={stat.label}
-                                className="scroll-reveal text-center group"
-                                style={{ transitionDelay: `${i * 150}ms` }}
-                            >
-                                <div className="bg-white rounded-3xl p-8 shadow-lg shadow-emerald-500/5 border border-emerald-100/50 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200/60 rounded-2xl mb-4 group-hover:from-emerald-500 group-hover:to-emerald-600 group-hover:scale-110 transition-all duration-300 shadow-sm">
-                                        <stat.icon className="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors duration-300" />
-                                    </div>
-                                    <div className="text-4xl font-black text-gray-900 mb-1">{stat.value}</div>
-                                    <div className="text-sm font-medium text-gray-500">{stat.label}</div>
-                                </div>
-                            </div>
+                            <StatCard key={stat.label} stat={stat} delay={i * 150} />
                         ))}
                     </div>
                 </div>
@@ -187,34 +202,63 @@ export function Home() {
                             <Link to="/agendar" key={service.name}>
                                 <div
                                     className={`scroll-reveal relative bg-white rounded-3xl p-7 border shadow-sm hover:shadow-2xl
-                               transition-all duration-300 hover:-translate-y-2 group cursor-pointer hover-glow
-                               ${service.popular ? 'border-emerald-200 ring-2 ring-emerald-500/10' : 'border-gray-100'}`}
-                                    style={{ transitionDelay: `${i * 100}ms` }}
+                               transition-all duration-300 hover:-translate-y-2 group cursor-pointer overflow-hidden
+                               ${service.popular ? 'border-emerald-200 ring-2 ring-emerald-500/15' : 'border-gray-100 hover:border-gray-200'}`}
+                                    style={{ transitionDelay: `${i * 80}ms` }}
                                 >
+                                    {/* Animated background glow on hover */}
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${service.accent || 'from-emerald-500 to-emerald-600'} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500 rounded-3xl`} />
+
                                     {/* Popular badge */}
                                     {service.popular && (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-lg shadow-emerald-500/30">
-                                            ⭐ Mais pedido
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-lg shadow-emerald-500/30 flex items-center gap-1">
+                                            <Star className="w-3 h-3" /> Mais pedido
                                         </div>
                                     )}
-                                    <div className="flex items-start justify-between mb-5">
-                                        <div className="w-14 h-14 bg-gradient-to-br from-emerald-100 to-emerald-200/60 rounded-2xl flex items-center justify-center group-hover:from-emerald-500 group-hover:to-emerald-600 group-hover:rotate-12 transition-all duration-300 shadow-sm">
-                                            <service.icon className="w-6 h-6 text-emerald-600 group-hover:text-white transition-colors duration-300" />
+
+                                    <div className="relative flex items-start justify-between mb-5">
+                                        <div className={`w-14 h-14 bg-gradient-to-br ${service.popular ? 'from-emerald-100 to-emerald-200/60' : 'from-gray-100 to-gray-200/60'} rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-br group-hover:${service.accent || 'from-emerald-500 to-emerald-600'} group-hover:rotate-6 transition-all duration-300 shadow-sm`}>
+                                            <service.icon className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors duration-300" />
                                         </div>
                                         <span className="text-2xl font-black text-emerald-500 group-hover:scale-110 transition-transform duration-300">{service.price}</span>
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">{service.name}</h3>
-                                    <div className="flex items-center justify-between">
+                                    <h3 className="relative text-lg font-bold text-gray-900 mb-3">{service.name}</h3>
+                                    <div className="relative flex items-center justify-between">
                                         <div className="flex items-center gap-1.5 text-sm text-gray-400">
                                             <Clock className="w-3.5 h-3.5" />
                                             <span>{service.duration}</span>
                                         </div>
-                                        <div className="text-xs font-semibold text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1">
+                                        <div className="text-xs font-bold text-emerald-500 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1">
                                             Agendar <ChevronRight className="w-3 h-3" />
                                         </div>
                                     </div>
+                                    {/* Bottom accent bar */}
+                                    <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${service.accent || 'from-emerald-400 to-emerald-600'} scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`} />
                                 </div>
                             </Link>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══════════════ TRUST BADGES ═══════════════ */}
+            <section className="py-10 px-4 bg-gradient-to-b from-white to-gray-50/40">
+                <div className="max-w-4xl mx-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 scroll-reveal">
+                        {[
+                            { icon: Shield, label: 'Anti-conflito', desc: 'Sistema trava o horário em tempo real', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
+                            { icon: Zap, label: 'Confirmação Rápida', desc: 'Agendamento em menos de 1 minuto', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
+                            { icon: Award, label: 'Qualidade Garantida', desc: '6+ anos de experiência profissional', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' },
+                        ].map((badge) => (
+                            <div key={badge.label} className={`flex items-center gap-4 p-4 rounded-2xl border ${badge.bg} transition-all duration-300 hover:shadow-md hover:-translate-y-0.5`}>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-white shadow-sm shrink-0`}>
+                                    <badge.icon className={`w-5 h-5 ${badge.color}`} />
+                                </div>
+                                <div>
+                                    <p className={`text-sm font-bold ${badge.color}`}>{badge.label}</p>
+                                    <p className="text-xs text-gray-500">{badge.desc}</p>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -231,15 +275,22 @@ export function Home() {
                             backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
                             backgroundSize: '20px 20px'
                         }} />
+                        {/* Shine sweep */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" style={{ transform: 'skewX(-20deg)', animation: 'shimmer-sweep 4s ease-in-out infinite' }} />
 
                         <div className="relative z-10">
+                            <div className="inline-flex items-center gap-2 bg-white/15 text-white/90 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6 border border-white/20">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Agende Agora
+                            </div>
                             <h3 className="text-3xl sm:text-4xl font-black mb-4">Pronto para mudar o visual?</h3>
                             <p className="text-emerald-100 text-lg mb-8 max-w-lg mx-auto">
                                 Agende agora e garanta o melhor horário para você. Atendimento profissional e de qualidade.
                             </p>
                             <Link to="/agendar">
-                                <Button className="bg-white text-emerald-600 hover:bg-emerald-50 px-10 h-14 rounded-2xl font-black text-lg shadow-xl shadow-black/10 hover:scale-105 transition-all duration-300">
+                                <Button className="bg-white text-emerald-600 hover:bg-emerald-50 px-10 h-14 rounded-2xl font-black text-lg shadow-xl shadow-black/10 hover:scale-105 transition-all duration-300 group">
                                     Agendar Meu Horário
+                                    <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </Link>
                         </div>
@@ -302,6 +353,50 @@ export function Home() {
                     </div>
                 </div>
             </section>
+        </div>
+    )
+}
+
+// ─── StatCard with animated counter ───
+function StatCard({ stat, delay }: {
+    stat: { label: string; value: string; numericValue: number; icon: React.ElementType; color: string; bg: string; hoverBg: string };
+    delay: number;
+}) {
+    const ref = useRef<HTMLDivElement>(null)
+    const [started, setStarted] = useState(false)
+    const count = useCountUp(stat.numericValue, 1800, started)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) setStarted(true) },
+            { threshold: 0.4 }
+        )
+        if (ref.current) observer.observe(ref.current)
+        return () => observer.disconnect()
+    }, [])
+
+    // Format display: preserve original format (e.g. '2.000+', '6+', '4.9')
+    const displayValue = stat.value.includes('.')
+        ? `${count.toFixed(1)}${stat.value.replace(/[\d.]/g, '').trim()}`
+        : `${Math.floor(count)}${stat.value.replace(/\d+/g, '').trim()}`
+
+    return (
+        <div
+            ref={ref}
+            className="scroll-reveal text-center group"
+            style={{ transitionDelay: `${delay}ms` }}
+        >
+            <div className="bg-white rounded-3xl p-8 shadow-lg shadow-gray-100 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                {/* Background glow on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-transparent group-hover:from-emerald-50/30 group-hover:to-transparent transition-all duration-500" />
+                <div className={`relative inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${stat.bg} rounded-2xl mb-4 ${stat.hoverBg} group-hover:scale-110 transition-all duration-300 shadow-sm`}>
+                    <stat.icon className={`w-7 h-7 ${stat.color} group-hover:text-white transition-colors duration-300`} />
+                </div>
+                <div className="relative text-4xl font-black text-gray-900 mb-1 tabular-nums">
+                    {started ? displayValue : stat.value}
+                </div>
+                <div className="relative text-sm font-medium text-gray-500">{stat.label}</div>
+            </div>
         </div>
     )
 }
