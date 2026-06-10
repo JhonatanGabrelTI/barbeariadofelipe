@@ -110,16 +110,16 @@ export function Footer() {
                         <div className="flex items-center gap-1.5 text-gray-500">
                             <span>Desenvolvido por</span>
                             <a
-                                href="https://github.com/JhonatanGabrelTI"
+                                href="https://www.instagram.com/jhonatan.gproenca/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="font-bold tracking-wide bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite] bg-clip-text text-transparent hover:scale-105 transition-all duration-300 flex items-center gap-1 group cursor-pointer"
+                                className="hover:scale-105 transition-all duration-300 flex items-center gap-1 group cursor-pointer"
                             >
-                                <span className="relative">
+                                <span className="relative font-black tracking-wide animate-text-shimmer">
                                     Jhonatan Proença
                                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-300 group-hover:w-full"></span>
                                 </span>
-                                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5 text-[11px] filter drop-shadow-[0_0_2px_rgba(20,184,166,0.4)]">🚀</span>
+                                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5 text-[11px]">🚀</span>
                             </a>
                         </div>
                     </div>
