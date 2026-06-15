@@ -81,8 +81,15 @@ export function Home() {
     return (
         <div className="min-h-screen" ref={scrollRef}>
             {/* ═══════════════ HERO SECTION ═══════════════ */}
-            <section className={`relative min-h-[95vh] flex items-center justify-center overflow-hidden ${IS_SAO_JOAO ? 'bg-[#FAF6F0]' : ''}`}>
-                {/* Multi-layer gradient background */}
+            <section 
+                className={`relative min-h-[92vh] flex items-center justify-center overflow-hidden transition-all duration-500`}
+                style={IS_SAO_JOAO ? {
+                    backgroundImage: "url('/sao-joao-bg.jpg')",
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center bottom'
+                } : undefined}
+            >
+                {/* Multi-layer gradient background for original theme */}
                 {!IS_SAO_JOAO ? (
                     <>
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-50" />
@@ -113,37 +120,27 @@ export function Home() {
                     </>
                 ) : (
                     <>
-                        {/* Stucco warm textured wall */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#F5EAD4] via-[#FAF6F0] to-[#EAE0C8]" />
-                        <div className="absolute inset-0 opacity-[0.06]" style={{
-                            backgroundImage: 'radial-gradient(circle, #78350F 1px, transparent 1px)',
-                            backgroundSize: '32px 32px'
-                        }} />
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.08)_0%,_transparent_60%)]" />
+                        {/* Dark overlay to increase text contrast and readability */}
+                        <div className="absolute inset-0 bg-black/15 mix-blend-multiply" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
 
-                        {/* Floating stars/drawings on wall */}
-                        <div className="absolute top-24 left-[10%] opacity-20 text-2xl select-none">✨</div>
-                        <div className="absolute top-1/3 right-[12%] opacity-15 text-3xl select-none">⭐</div>
-                        <div className="absolute bottom-40 left-[25%] opacity-20 text-2xl select-none">✨</div>
-                        <div className="absolute top-1/2 left-[5%] opacity-15 text-xl select-none">⭐</div>
-                        <div className="absolute top-24 right-[25%] opacity-20 text-2xl select-none">✨</div>
+                        {/* --- ANIMATIONS OVERLAY FOR STATIC BACKGROUND --- */}
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                            {/* Glow effects positioned roughly where the lightbulbs are in the image */}
+                            <div className="absolute top-[2%] left-[1.5%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" />
+                            <div className="absolute top-[12%] left-[16.5%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.4s' }} />
+                            <div className="absolute top-[10%] left-[35%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.8s' }} />
+                            <div className="absolute top-[5%] left-[46.2%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.2s' }} />
+                            <div className="absolute top-[13%] left-[83%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.6s' }} />
 
-                        {/* --- RUSTIC WOOD SCENARIO BASE --- */}
-                        <div className="absolute bottom-0 left-0 right-0 h-36 z-10 flex items-end">
-                            {/* Burlap/Juta fabric background layer on the very bottom */}
-                            <div className="absolute inset-x-0 bottom-0 h-16 bg-[#B48A53] opacity-35" style={{
-                                backgroundImage: 'repeating-linear-gradient(45deg, #78350F 0px, #78350F 2px, transparent 2px, transparent 10px), repeating-linear-gradient(-45deg, #78350F 0px, #78350F 2px, transparent 2px, transparent 10px)',
-                            }} />
-                            {/* Checkered pattern tablecloth (Toalha xadrez) */}
-                            <div className="absolute inset-x-0 bottom-0 h-14 bg-[#D97706] shadow-[inset_0_4px_6px_rgba(0,0,0,0.15)]" style={{
-                                backgroundImage: 'linear-gradient(90deg, rgba(239,68,68,0.85) 50%, transparent 50%), linear-gradient(rgba(239,68,68,0.85) 50%, transparent 50%)',
-                                backgroundSize: '36px 36px'
-                            }} />
-                            {/* Wooden Table surface edge */}
-                            <div className="absolute inset-x-0 bottom-14 h-6 bg-[#78350F] border-t border-[#5F270B] shadow-lg" style={{
-                                backgroundImage: 'linear-gradient(rgba(0,0,0,0.15) 50%, transparent 50%)',
-                                backgroundSize: '100% 3px'
-                            }} />
+                            {/* Floating embers/sparks rising from the campfire on the bottom right */}
+                            <div className="absolute bottom-16 right-[30%] sm:right-[32%] w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping opacity-60" style={{ animationDuration: '2s' }} />
+                            <div className="absolute bottom-20 right-[28%] sm:right-[30%] w-2 h-2 bg-yellow-400 rounded-full animate-float opacity-75" style={{ animationDuration: '3s' }} />
+                            <div className="absolute bottom-24 right-[31%] sm:right-[33%] w-1 h-1 bg-red-400 rounded-full animate-float opacity-50" style={{ animationDuration: '2.5s', animationDelay: '1s' }} />
+                            <div className="absolute bottom-14 right-[33%] sm:right-[35%] w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse opacity-80" />
+
+                            {/* Warm fire glow pulse over the campfire area */}
+                            <div className="absolute bottom-8 right-[27%] sm:right-[30%] w-28 h-28 rounded-full bg-gradient-to-t from-orange-600/30 to-yellow-500/0 blur-xl animate-pulse" style={{ animationDuration: '1.8s' }} />
                         </div>
                     </>
                 )}
@@ -152,7 +149,7 @@ export function Home() {
                     {/* Badge */}
                     <div className={`animate-fade-in-up inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 shadow-sm border ${
                         IS_SAO_JOAO 
-                            ? 'bg-amber-100/85 text-amber-900 border-amber-300/50' 
+                            ? 'bg-amber-950/80 text-amber-200 border-amber-500/30 backdrop-blur-md' 
                             : 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border-emerald-200/50'
                     }`}>
                         <Sparkles className="w-4 h-4 animate-wiggle" />
@@ -160,22 +157,26 @@ export function Home() {
                     </div>
 
                     {/* Title */}
-                    <h1 className="animate-fade-in-delay-1 text-5xl sm:text-6xl lg:text-8xl font-black text-gray-900 leading-[1.1] tracking-tight mb-6">
+                    <h1 className={`animate-fade-in-delay-1 text-5xl sm:text-6xl lg:text-8xl font-black leading-[1.1] tracking-tight mb-6 ${
+                        IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]' : 'text-gray-900'
+                    }`}>
                         Seu Estilo Impecável{' '}
                         <span className="relative inline-block">
-                            <span className={IS_SAO_JOAO ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 bg-clip-text text-transparent' : 'animate-text-shimmer'}>
+                            <span className={IS_SAO_JOAO ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 bg-clip-text text-transparent' : 'animate-text-shimmer'}>
                                 Começa Aqui
                             </span>
                             <svg className="absolute -bottom-2 left-0 w-full animate-underline-draw" viewBox="0 0 300 12" fill="none">
-                                <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 8" stroke={IS_SAO_JOAO ? '#EA580C' : '#10B981'} strokeWidth="3" strokeLinecap="round" />
+                                <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 8" stroke={IS_SAO_JOAO ? '#FB923C' : '#10B981'} strokeWidth="3" strokeLinecap="round" />
                             </svg>
                         </span>
                     </h1>
 
                     {/* Subtitle */}
-                    <p className="animate-fade-in-delay-2 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
+                    <p className={`animate-fade-in-delay-2 text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed ${
+                        IS_SAO_JOAO ? 'text-orange-100/90 font-medium filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]' : 'text-gray-600'
+                    }`}>
                         Agende seu horário de forma rápida e prática. Oferecemos cortes de qualidade
-                        com o conforto que você merece. <strong className={IS_SAO_JOAO ? 'text-[#78350F]' : 'text-gray-600'}>Sem filas, sem espera.</strong>
+                        com o conforto que você merece. <strong className={IS_SAO_JOAO ? 'text-yellow-300 font-extrabold' : 'text-gray-600'}>Sem filas, sem espera.</strong>
                     </p>
 
                     {/* CTA Buttons */}
@@ -184,7 +185,7 @@ export function Home() {
                             <Button
                                 className={`text-white px-10 py-5 rounded-full text-lg font-bold hover:scale-105 transition-all duration-300 shadow-2xl h-auto group ${
                                     IS_SAO_JOAO 
-                                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-orange-500/30 animate-pulse' 
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-orange-500/40 animate-pulse' 
                                         : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-emerald-500/30 animate-pulse-glow'
                                 }`}
                             >
@@ -197,7 +198,7 @@ export function Home() {
                                 variant="outline" 
                                 className={`px-8 py-5 rounded-full text-lg font-semibold border-2 h-auto transition-all duration-300 ${
                                     IS_SAO_JOAO 
-                                        ? 'border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400 bg-white/80' 
+                                        ? 'border-orange-400 text-orange-200 hover:bg-orange-950/20 hover:border-orange-300 bg-black/40 hover:text-white backdrop-blur-sm shadow-xl' 
                                         : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300'
                                 }`}
                             >
@@ -206,59 +207,8 @@ export function Home() {
                             </Button>
                         </a>
                     </div>
-                    <p className="mt-5 text-sm text-gray-500">✨ Agende em menos de 1 minuto</p>
+                    <p className={`mt-5 text-sm ${IS_SAO_JOAO ? 'text-orange-200/70 font-medium' : 'text-gray-500'}`}>✨ Agende em menos de 1 minuto</p>
                 </div>
-
-                {/* --- SIDE DECORATIONS FOR SÃO JOÃO --- */}
-                {IS_SAO_JOAO && (
-                    <div className="absolute inset-x-0 bottom-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-36 z-20 pointer-events-none flex justify-between items-end">
-                        {/* Left Side: Placa de madeira + Chapéu de palha */}
-                        <div className="flex flex-col items-center select-none relative -mb-4 lg:-ml-6 transform origin-bottom scale-[0.65] sm:scale-75 md:scale-90 lg:scale-100 transition-all duration-300">
-                            {/* Wooden Board */}
-                            <div className="relative bg-[#8B5A2B] border-4 border-[#5C3A21] text-[#FAF6F0] rounded-xl p-3 text-center w-40 shadow-2xl flex flex-col items-center select-none">
-                                <div className="absolute inset-x-0 top-1/3 h-0.5 bg-[#5C3A21] opacity-50" />
-                                <div className="absolute inset-x-0 top-2/3 h-0.5 bg-[#5C3A21] opacity-50" />
-                                <span className="text-[11px] font-black tracking-widest text-yellow-300 uppercase filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">CUIDADO</span>
-                                <span className="text-[9px] font-bold text-orange-100">QUE O</span>
-                                <span className="text-base font-black text-yellow-400 tracking-wide filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">ESTILO</span>
-                                <span className="text-[10px] font-black text-orange-200 tracking-wider leading-none mt-1">É ARRETADO!</span>
-                                <span className="text-lg mt-1 filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">👨</span>
-                            </div>
-                            {/* Stick */}
-                            <div className="w-4 h-12 bg-[#5C3A21] shadow-md -mt-1" />
-                            {/* Straw Hat SVG */}
-                            <div className="relative w-36 h-12 -mt-4 filter drop-shadow-[0_6px_6px_rgba(0,0,0,0.3)]">
-                                <svg viewBox="0 0 100 40" fill="none" className="w-full h-full">
-                                    <ellipse cx="50" cy="30" rx="42" ry="7" fill="#EAB308" stroke="#A16207" strokeWidth="2" />
-                                    <path d="M28 30 C 28 12, 72 12, 72 30 Z" fill="#FACC15" stroke="#A16207" strokeWidth="2" />
-                                    <path d="M28 28 C 38 25, 62 25, 72 28 L 72 30 C 62 27, 38 27, 28 30 Z" fill="#EF4444" />
-                                    <path d="M15 31 L 9 32 M85 31 L 91 32 M32 18 L 35 15 M68 18 L 65 15" stroke="#A16207" strokeWidth="1" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        {/* Right Side: Lousa de giz + Fogueira */}
-                        <div className="flex items-end gap-3 lg:gap-5 select-none relative -mb-4 lg:-mr-6 transform origin-bottom scale-[0.65] sm:scale-75 md:scale-90 lg:scale-100 transition-all duration-300">
-                            {/* Chalkboard */}
-                            <div className="relative bg-[#2D3748] border-[6px] border-[#8B5A2B] rounded-xl p-3 text-center w-36 h-24 shadow-2xl flex flex-col justify-center items-center select-none">
-                                <div className="absolute inset-1 border border-dashed border-white/20 rounded-md" />
-                                <p className="font-mono text-[10px] text-white/95 uppercase tracking-widest leading-relaxed">BOM CORTE,</p>
-                                <p className="font-mono text-sm text-yellow-300 font-extrabold tracking-wide rotate-1 uppercase leading-none mt-1">BOA FESTA!</p>
-                            </div>
-
-                            {/* Campfire */}
-                            <div className="relative w-20 h-24 flex flex-col items-center justify-end -mb-1">
-                                <svg viewBox="0 0 60 80" className="w-16 h-20 animate-flame filter drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">
-                                    <path d="M30 0 C 45 20, 55 45, 40 65 C 30 75, 10 70, 15 50 C 5 35, 15 15, 30 0 Z" fill="#EF4444" />
-                                    <path d="M30 15 C 40 30, 48 48, 38 65 C 32 72, 18 70, 22 55 C 15 45, 20 30, 30 15 Z" fill="#F97316" />
-                                    <path d="M30 30 C 35 40, 40 52, 35 65 C 30 70, 22 70, 25 58 C 20 50, 25 40, 30 30 Z" fill="#FACC15" />
-                                </svg>
-                                <div className="relative w-16 h-3 bg-[#5C3A21] rounded-full transform -rotate-12 shadow-md" />
-                                <div className="absolute bottom-0 w-16 h-3 bg-[#5C3A21] rounded-full transform rotate-12 shadow-md -translate-x-1" />
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Bottom gradient fade (Only if not Sao Joao to prevent overlaying the wood floor texture) */}
                 {!IS_SAO_JOAO && (
