@@ -66,25 +66,31 @@ export function Produtos() {
         <div
             className="min-h-screen pt-24 pb-16 px-4 relative overflow-hidden"
             ref={scrollRef}
-            style={IS_SAO_JOAO ? {
-                backgroundImage: "url('/sao-joao-bg.jpg')",
-                backgroundSize: 'cover',
-                backgroundPosition: 'center center',
-            } : { background: 'rgb(249,250,251,0.5)' }}
         >
-            {/* São João overlays */}
+            {/* São João fixed background */}
             {IS_SAO_JOAO ? (
                 <>
-                    <div className="absolute inset-0 bg-black/35" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
-                    <div className="absolute inset-0 pointer-events-none">
+                    {/* Fixed crisp background image — viewport-sized, never stretched */}
+                    <div
+                        className="fixed inset-0 -z-20"
+                        style={{
+                            backgroundImage: "url('/sao-joao-bg.jpg')",
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center center',
+                        }}
+                    />
+                    <div className="fixed inset-0 -z-10 bg-black/35" />
+                    <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
+                    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -9 }}>
                         <div className="absolute top-[4%] left-[8%] w-10 h-10 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" />
                         <div className="absolute top-[7%] left-[40%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.6s' }} />
                         <div className="absolute top-[3%] right-[15%] w-10 h-10 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.1s' }} />
                         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-orange-900/40 to-transparent" />
                     </div>
                 </>
-            ) : null}
+            ) : (
+                <div className="absolute inset-0 -z-10" style={{ background: 'rgb(249,250,251,0.5)' }} />
+            )}
             <div className="max-w-7xl mx-auto relative z-10">
                 <div className="text-center mb-16 animate-fade-in-up">
                     <h1 className={`text-4xl sm:text-5xl font-black mb-4 tracking-tight ${

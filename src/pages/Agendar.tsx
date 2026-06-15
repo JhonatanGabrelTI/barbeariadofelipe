@@ -305,32 +305,31 @@ export function Agendar() {
     const currentStepIndex = stepsArray.indexOf(step)
 
     return (
-        <div
-            className="min-h-screen pt-24 pb-16 px-4 relative overflow-hidden"
-            style={IS_SAO_JOAO ? {
-                backgroundImage: "url('/sao-joao-bg.jpg')",
-                backgroundSize: 'cover',
-                backgroundPosition: 'center center',
-            } : undefined}
-        >
-            {/* São João overlays */}
+        <div className="min-h-screen pt-24 pb-16 px-4 relative overflow-hidden">
+            {/* São João fixed background */}
             {IS_SAO_JOAO ? (
                 <>
+                    {/* Fixed crisp background image — viewport-sized, never stretched */}
+                    <div
+                        className="fixed inset-0 -z-20"
+                        style={{
+                            backgroundImage: "url('/sao-joao-bg.jpg')",
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center center',
+                        }}
+                    />
                     {/* Dark overlay for readability */}
-                    <div className="absolute inset-0 -z-0 bg-black/30" />
-                    <div className="absolute inset-0 -z-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
+                    <div className="fixed inset-0 -z-10 bg-black/35" />
+                    <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
                     {/* Animated overlay effects */}
-                    <div className="absolute inset-0 pointer-events-none z-0">
-                        {/* Lantern glow top */}
+                    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -9 }}>
                         <div className="absolute top-[5%] left-[10%] w-10 h-10 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" />
                         <div className="absolute top-[8%] left-[35%] w-8 h-8 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.5s' }} />
                         <div className="absolute top-[4%] right-[20%] w-10 h-10 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1s' }} />
                         <div className="absolute top-[10%] right-[5%] w-7 h-7 rounded-full bg-yellow-200/30 blur-md animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
-                        {/* Floating embers */}
-                        <div className="absolute bottom-32 right-[25%] w-2 h-2 bg-orange-400 rounded-full animate-float opacity-70" style={{ animationDuration: '2.5s' }} />
-                        <div className="absolute bottom-40 right-[22%] w-1.5 h-1.5 bg-yellow-400 rounded-full animate-float opacity-60" style={{ animationDuration: '3s', animationDelay: '0.7s' }} />
-                        <div className="absolute bottom-36 right-[28%] w-1 h-1 bg-red-400 rounded-full animate-float opacity-50" style={{ animationDuration: '2s', animationDelay: '1.2s' }} />
-                        {/* Warm glow at bottom */}
+                        <div className="absolute bottom-16 right-[25%] w-2 h-2 bg-orange-400 rounded-full animate-float opacity-70" style={{ animationDuration: '2.5s' }} />
+                        <div className="absolute bottom-24 right-[22%] w-1.5 h-1.5 bg-yellow-400 rounded-full animate-float opacity-60" style={{ animationDuration: '3s', animationDelay: '0.7s' }} />
+                        <div className="absolute bottom-20 right-[28%] w-1 h-1 bg-red-400 rounded-full animate-float opacity-50" style={{ animationDuration: '2s', animationDelay: '1.2s' }} />
                         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-orange-900/40 to-transparent" />
                     </div>
                 </>
@@ -340,12 +339,10 @@ export function Agendar() {
                     <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-white to-emerald-50/40" />
                     <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_rgba(16,185,129,0.06)_0%,_transparent_55%)]" />
                     <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(5,150,105,0.04)_0%,_transparent_55%)]" />
-                    {/* Dot grid */}
                     <div className="absolute inset-0 -z-10 opacity-[0.025]" style={{
                         backgroundImage: 'radial-gradient(circle, #059669 1px, transparent 1px)',
                         backgroundSize: '28px 28px'
                     }} />
-                    {/* Floating blobs */}
                     <Particle style={{ width: 300, height: 300, top: '5%', right: '3%', filter: 'blur(60px)', animationName: 'blob', animationDuration: '9s', animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite' }} />
                     <Particle style={{ width: 200, height: 200, bottom: '10%', left: '2%', filter: 'blur(50px)', animationName: 'blob', animationDuration: '12s', animationDelay: '3s', animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite' }} />
                 </>
