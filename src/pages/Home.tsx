@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useServicos } from '@/hooks/useServicos'
 import { Phone, MapPin, Scissors, Star, Clock, Users, ChevronRight, Sparkles, ChevronDown, Shield, Zap, Award } from 'lucide-react'
+import { IS_SAO_JOAO } from '../config'
 
 const defaultServices = [
     { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-blue-500 to-blue-600' },
@@ -80,87 +81,243 @@ export function Home() {
     return (
         <div className="min-h-screen" ref={scrollRef}>
             {/* ═══════════════ HERO SECTION ═══════════════ */}
-            <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+            <section className={`relative min-h-[95vh] flex items-center justify-center overflow-hidden ${IS_SAO_JOAO ? 'bg-[#FAF6F0]' : ''}`}>
                 {/* Multi-layer gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-50" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(16,185,129,0.08)_0%,_transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(5,150,105,0.06)_0%,_transparent_50%)]" />
+                {!IS_SAO_JOAO ? (
+                    <>
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-50" />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(16,185,129,0.08)_0%,_transparent_50%)]" />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(5,150,105,0.06)_0%,_transparent_50%)]" />
 
-                {/* Dot pattern overlay */}
-                <div className="absolute inset-0 opacity-[0.03]" style={{
-                    backgroundImage: 'radial-gradient(circle, #059669 1px, transparent 1px)',
-                    backgroundSize: '24px 24px'
-                }} />
+                        {/* Dot pattern overlay */}
+                        <div className="absolute inset-0 opacity-[0.03]" style={{
+                            backgroundImage: 'radial-gradient(circle, #059669 1px, transparent 1px)',
+                            backgroundSize: '24px 24px'
+                        }} />
 
-                {/* Animated floating blobs */}
-                <div className="absolute top-20 right-10 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-emerald-300/20 rounded-full blur-3xl animate-blob" />
-                <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-tr from-emerald-100/40 to-emerald-200/20 rounded-full blur-3xl animate-blob" style={{ animationDelay: '2s' }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-300/10 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }} />
+                        {/* Animated floating blobs */}
+                        <div className="absolute top-20 right-10 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-emerald-300/20 rounded-full blur-3xl animate-blob" />
+                        <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-tr from-emerald-100/40 to-emerald-200/20 rounded-full blur-3xl animate-blob" style={{ animationDelay: '2s' }} />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-300/10 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }} />
 
-                {/* Floating decorative scissors */}
-                <div className="absolute top-32 left-[15%] animate-float opacity-[0.07]">
-                    <Scissors className="w-20 h-20 text-emerald-500 rotate-45" />
-                </div>
-                <div className="absolute bottom-40 right-[20%] animate-float-slow opacity-[0.07]">
-                    <Scissors className="w-14 h-14 text-emerald-600 -rotate-12" />
-                </div>
-                <div className="absolute top-[60%] left-[8%] animate-float-slow opacity-[0.05]" style={{ animationDelay: '1s' }}>
-                    <Star className="w-10 h-10 text-emerald-400" />
-                </div>
+                        {/* Floating decorative scissors */}
+                        <div className="absolute top-32 left-[15%] animate-float opacity-[0.07]">
+                            <Scissors className="w-20 h-20 text-emerald-500 rotate-45" />
+                        </div>
+                        <div className="absolute bottom-40 right-[20%] animate-float-slow opacity-[0.07]">
+                            <Scissors className="w-14 h-14 text-emerald-600 -rotate-12" />
+                        </div>
+                        <div className="absolute top-[60%] left-[8%] animate-float-slow opacity-[0.05]" style={{ animationDelay: '1s' }}>
+                            <Star className="w-10 h-10 text-emerald-400" />
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {/* Stucco warm textured wall */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#F5EAD4] via-[#FAF6F0] to-[#EAE0C8]" />
+                        <div className="absolute inset-0 opacity-[0.06]" style={{
+                            backgroundImage: 'radial-gradient(circle, #78350F 1px, transparent 1px)',
+                            backgroundSize: '32px 32px'
+                        }} />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.08)_0%,_transparent_60%)]" />
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+                        {/* Floating stars/drawings on wall */}
+                        <div className="absolute top-24 left-[10%] opacity-20 text-2xl select-none">✨</div>
+                        <div className="absolute top-1/3 right-[12%] opacity-15 text-3xl select-none">⭐</div>
+                        <div className="absolute bottom-40 left-[25%] opacity-20 text-2xl select-none">✨</div>
+                        <div className="absolute top-1/2 left-[5%] opacity-15 text-xl select-none">⭐</div>
+                        <div className="absolute top-24 right-[25%] opacity-20 text-2xl select-none">✨</div>
+
+                        {/* --- BANDEIRINHAS (FLAGS) SVG --- */}
+                        <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+                            <svg className="w-full h-28 sm:h-32" viewBox="0 0 1200 120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {/* String line */}
+                                <path d="M-10 10 Q 150 70, 300 20 T 600 20 T 900 20 T 1210 10" stroke="#783F04" strokeWidth="2" strokeDasharray="3 3" />
+                                
+                                {/* Flags group (Bandeirinhas) */}
+                                {/* First curve flags */}
+                                <polygon points="30,17 60,19 45,60" fill="#EF4444" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="80,21 110,24 95,65" fill="#3B82F6" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="130,26 160,28 145,69" fill="#10B981" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="180,28 210,28 195,69" fill="#F59E0B" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="230,26 260,23 245,65" fill="#EC4899" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="280,21 310,18 295,59" fill="#10B981" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                                {/* Second curve flags */}
+                                <polygon points="330,17 360,17 345,58" fill="#EF4444" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="380,18 410,19 395,60" fill="#3B82F6" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="430,20 460,21 445,62" fill="#F59E0B" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="480,21 510,21 495,62" fill="#EC4899" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="530,21 560,20 545,61" fill="#3B82F6" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="580,18 610,17 595,58" fill="#10B981" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                                {/* Third curve flags */}
+                                <polygon points="630,17 660,18 645,59" fill="#EF4444" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="680,20 710,21 695,62" fill="#3B82F6" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="730,21 760,21 745,62" fill="#F59E0B" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="780,21 810,20 795,61" fill="#EC4899" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="830,18 860,17 845,58" fill="#10B981" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="880,17 910,17 895,58" fill="#EF4444" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                                {/* Fourth curve flags */}
+                                <polygon points="930,18 960,20 945,61" fill="#3B82F6" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="980,21 1010,23 995,64" fill="#F59E0B" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="1030,24 1060,26 1045,67" fill="#10B981" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="1080,24 1110,21 1095,62" fill="#EC4899" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                                <polygon points="1130,19 1160,17 1145,58" fill="#EF4444" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                                {/* Add small lights */}
+                                <path d="M-10 15 Q 150 78, 300 25 T 600 25 T 900 25 T 1210 15" stroke="rgba(253, 224, 71, 0.4)" strokeWidth="1.5" />
+                                <circle cx="150" cy="53" r="6" fill="#FDE047" className="animate-bulb-glow filter drop-shadow-[0_0_6px_#FDE047]" />
+                                <circle cx="350" cy="38" r="6" fill="#FDE047" className="animate-bulb-glow filter drop-shadow-[0_0_6px_#FDE047]" style={{ animationDelay: '0.3s' }} />
+                                <circle cx="500" cy="38" r="6" fill="#FDE047" className="animate-bulb-glow filter drop-shadow-[0_0_6px_#FDE047]" style={{ animationDelay: '0.6s' }} />
+                                <circle cx="750" cy="38" r="6" fill="#FDE047" className="animate-bulb-glow filter drop-shadow-[0_0_6px_#FDE047]" style={{ animationDelay: '0.9s' }} />
+                                <circle cx="950" cy="40" r="6" fill="#FDE047" className="animate-bulb-glow filter drop-shadow-[0_0_6px_#FDE047]" style={{ animationDelay: '1.2s' }} />
+                                <circle cx="1100" cy="34" r="6" fill="#FDE047" className="animate-bulb-glow filter drop-shadow-[0_0_6px_#FDE047]" style={{ animationDelay: '1.5s' }} />
+                            </svg>
+                        </div>
+
+                        {/* --- RUSTIC WOOD SCENARIO BASE --- */}
+                        <div className="absolute bottom-0 left-0 right-0 h-36 z-10 flex items-end">
+                            {/* Burlap/Juta fabric background layer on the very bottom */}
+                            <div className="absolute inset-x-0 bottom-0 h-16 bg-[#B48A53] opacity-35" style={{
+                                backgroundImage: 'repeating-linear-gradient(45deg, #78350F 0px, #78350F 2px, transparent 2px, transparent 10px), repeating-linear-gradient(-45deg, #78350F 0px, #78350F 2px, transparent 2px, transparent 10px)',
+                            }} />
+                            {/* Checkered pattern tablecloth (Toalha xadrez) */}
+                            <div className="absolute inset-x-0 bottom-0 h-14 bg-[#D97706] shadow-[inset_0_4px_6px_rgba(0,0,0,0.15)]" style={{
+                                backgroundImage: 'linear-gradient(90deg, rgba(239,68,68,0.85) 50%, transparent 50%), linear-gradient(rgba(239,68,68,0.85) 50%, transparent 50%)',
+                                backgroundSize: '36px 36px'
+                            }} />
+                            {/* Wooden Table surface edge */}
+                            <div className="absolute inset-x-0 bottom-14 h-6 bg-[#78350F] border-t border-[#5F270B] shadow-lg" style={{
+                                backgroundImage: 'linear-gradient(rgba(0,0,0,0.15) 50%, transparent 50%)',
+                                backgroundSize: '100% 3px'
+                            }} />
+                        </div>
+                    </>
+                )}
+
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center z-20">
                     {/* Badge */}
-                    <div className="animate-fade-in-up inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 shadow-sm border border-emerald-200/50">
+                    <div className={`animate-fade-in-up inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 shadow-sm border ${
+                        IS_SAO_JOAO 
+                            ? 'bg-amber-100/85 text-amber-900 border-amber-300/50' 
+                            : 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border-emerald-200/50'
+                    }`}>
                         <Sparkles className="w-4 h-4 animate-wiggle" />
-                        <span>Barbearia Premium em Sua Cidade</span>
+                        <span>{IS_SAO_JOAO ? '🔥 Viva o São João! Venha Arretar seu Estilo!' : 'Barbearia Premium em Sua Cidade'}</span>
                     </div>
 
                     {/* Title */}
                     <h1 className="animate-fade-in-delay-1 text-5xl sm:text-6xl lg:text-8xl font-black text-gray-900 leading-[1.1] tracking-tight mb-6">
                         Seu Estilo Impecável{' '}
                         <span className="relative inline-block">
-                            <span className="animate-text-shimmer">Começa Aqui</span>
+                            <span className={IS_SAO_JOAO ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-red-600 bg-clip-text text-transparent' : 'animate-text-shimmer'}>
+                                Começa Aqui
+                            </span>
                             <svg className="absolute -bottom-2 left-0 w-full animate-underline-draw" viewBox="0 0 300 12" fill="none">
-                                <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 8" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
+                                <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 8" stroke={IS_SAO_JOAO ? '#EA580C' : '#10B981'} strokeWidth="3" strokeLinecap="round" />
                             </svg>
                         </span>
                     </h1>
 
                     {/* Subtitle */}
-                    <p className="animate-fade-in-delay-2 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
+                    <p className="animate-fade-in-delay-2 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
                         Agende seu horário de forma rápida e prática. Oferecemos cortes de qualidade
-                        com o conforto que você merece. <strong className="text-gray-600">Sem filas, sem espera.</strong>
+                        com o conforto que você merece. <strong className={IS_SAO_JOAO ? 'text-[#78350F]' : 'text-gray-600'}>Sem filas, sem espera.</strong>
                     </p>
 
                     {/* CTA Buttons */}
                     <div className="animate-fade-in-delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link to="/agendar">
                             <Button
-                                className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-10 py-5 rounded-full text-lg font-bold 
-                           hover:from-emerald-600 hover:to-emerald-700 hover:scale-105 transition-all duration-300 
-                           shadow-2xl shadow-emerald-500/30 animate-pulse-glow h-auto group"
+                                className={`text-white px-10 py-5 rounded-full text-lg font-bold hover:scale-105 transition-all duration-300 shadow-2xl h-auto group ${
+                                    IS_SAO_JOAO 
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-orange-500/30 animate-pulse' 
+                                        : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-emerald-500/30 animate-pulse-glow'
+                                }`}
                             >
                                 Agendar Agora
                                 <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         </Link>
                         <a href="https://wa.me/5543998648935" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="px-8 py-5 rounded-full text-lg font-semibold border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 h-auto transition-all duration-300">
+                            <Button 
+                                variant="outline" 
+                                className={`px-8 py-5 rounded-full text-lg font-semibold border-2 h-auto transition-all duration-300 ${
+                                    IS_SAO_JOAO 
+                                        ? 'border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400 bg-white/80' 
+                                        : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300'
+                                }`}
+                            >
                                 <Phone className="w-5 h-5 mr-2" />
                                 WhatsApp
                             </Button>
                         </a>
                     </div>
-                    <p className="mt-5 text-sm text-gray-400">✨ Agende em menos de 1 minuto</p>
+                    <p className="mt-5 text-sm text-gray-500">✨ Agende em menos de 1 minuto</p>
                 </div>
 
-                {/* Bottom gradient fade */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
+                {/* --- SIDE DECORATIONS FOR SÃO JOÃO --- */}
+                {IS_SAO_JOAO && (
+                    <div className="absolute inset-x-0 bottom-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-36 z-20 pointer-events-none flex justify-between items-end">
+                        {/* Left Side: Placa de madeira + Chapéu de palha */}
+                        <div className="flex flex-col items-center select-none relative -mb-4 lg:-ml-6 transform origin-bottom scale-[0.65] sm:scale-75 md:scale-90 lg:scale-100 transition-all duration-300">
+                            {/* Wooden Board */}
+                            <div className="relative bg-[#8B5A2B] border-4 border-[#5C3A21] text-[#FAF6F0] rounded-xl p-3 text-center w-40 shadow-2xl flex flex-col items-center select-none">
+                                <div className="absolute inset-x-0 top-1/3 h-0.5 bg-[#5C3A21] opacity-50" />
+                                <div className="absolute inset-x-0 top-2/3 h-0.5 bg-[#5C3A21] opacity-50" />
+                                <span className="text-[11px] font-black tracking-widest text-yellow-300 uppercase filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">CUIDADO</span>
+                                <span className="text-[9px] font-bold text-orange-100">QUE O</span>
+                                <span className="text-base font-black text-yellow-400 tracking-wide filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">ESTILO</span>
+                                <span className="text-[10px] font-black text-orange-200 tracking-wider leading-none mt-1">É ARRETADO!</span>
+                                <span className="text-lg mt-1 filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">👨</span>
+                            </div>
+                            {/* Stick */}
+                            <div className="w-4 h-12 bg-[#5C3A21] shadow-md -mt-1" />
+                            {/* Straw Hat SVG */}
+                            <div className="relative w-36 h-12 -mt-4 filter drop-shadow-[0_6px_6px_rgba(0,0,0,0.3)]">
+                                <svg viewBox="0 0 100 40" fill="none" className="w-full h-full">
+                                    <ellipse cx="50" cy="30" rx="42" ry="7" fill="#EAB308" stroke="#A16207" strokeWidth="2" />
+                                    <path d="M28 30 C 28 12, 72 12, 72 30 Z" fill="#FACC15" stroke="#A16207" strokeWidth="2" />
+                                    <path d="M28 28 C 38 25, 62 25, 72 28 L 72 30 C 62 27, 38 27, 28 30 Z" fill="#EF4444" />
+                                    <path d="M15 31 L 9 32 M85 31 L 91 32 M32 18 L 35 15 M68 18 L 65 15" stroke="#A16207" strokeWidth="1" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Right Side: Lousa de giz + Fogueira */}
+                        <div className="flex items-end gap-3 lg:gap-5 select-none relative -mb-4 lg:-mr-6 transform origin-bottom scale-[0.65] sm:scale-75 md:scale-90 lg:scale-100 transition-all duration-300">
+                            {/* Chalkboard */}
+                            <div className="relative bg-[#2D3748] border-[6px] border-[#8B5A2B] rounded-xl p-3 text-center w-36 h-24 shadow-2xl flex flex-col justify-center items-center select-none">
+                                <div className="absolute inset-1 border border-dashed border-white/20 rounded-md" />
+                                <p className="font-mono text-[10px] text-white/95 uppercase tracking-widest leading-relaxed">BOM CORTE,</p>
+                                <p className="font-mono text-sm text-yellow-300 font-extrabold tracking-wide rotate-1 uppercase leading-none mt-1">BOA FESTA!</p>
+                            </div>
+
+                            {/* Campfire */}
+                            <div className="relative w-20 h-24 flex flex-col items-center justify-end -mb-1">
+                                <svg viewBox="0 0 60 80" className="w-16 h-20 animate-flame filter drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">
+                                    <path d="M30 0 C 45 20, 55 45, 40 65 C 30 75, 10 70, 15 50 C 5 35, 15 15, 30 0 Z" fill="#EF4444" />
+                                    <path d="M30 15 C 40 30, 48 48, 38 65 C 32 72, 18 70, 22 55 C 15 45, 20 30, 30 15 Z" fill="#F97316" />
+                                    <path d="M30 30 C 35 40, 40 52, 35 65 C 30 70, 22 70, 25 58 C 20 50, 25 40, 30 30 Z" fill="#FACC15" />
+                                </svg>
+                                <div className="relative w-16 h-3 bg-[#5C3A21] rounded-full transform -rotate-12 shadow-md" />
+                                <div className="absolute bottom-0 w-16 h-3 bg-[#5C3A21] rounded-full transform rotate-12 shadow-md -translate-x-1" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Bottom gradient fade (Only if not Sao Joao to prevent overlaying the wood floor texture) */}
+                {!IS_SAO_JOAO && (
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
+                )}
 
                 {/* Scroll indicator */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-bounce opacity-40">
-                    <span className="text-xs text-gray-400 font-medium uppercase tracking-widest">Scroll</span>
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-bounce opacity-40 z-20">
+                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">Scroll</span>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
                 </div>
             </section>
 

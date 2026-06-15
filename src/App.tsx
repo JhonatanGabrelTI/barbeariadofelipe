@@ -8,6 +8,7 @@ import { Home } from '@/pages/Home'
 import { Agendar } from '@/pages/Agendar'
 import { Painel } from '@/pages/Painel'
 import { Produtos } from '@/pages/Produtos'
+import { IS_SAO_JOAO } from './config'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,7 +24,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <div className="min-h-screen bg-white text-gray-800 flex flex-col">
+          <div className={`min-h-screen ${IS_SAO_JOAO ? 'theme-sao-joao bg-[#FAF6F0]' : 'bg-white'} text-gray-800 flex flex-col transition-colors duration-500`}>
             <Navbar />
             <main className="flex-1 pt-16">
               <Routes>
