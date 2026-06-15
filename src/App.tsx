@@ -24,7 +24,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <div className={`min-h-screen ${IS_SAO_JOAO ? 'theme-sao-joao bg-[#FAF6F0]' : 'bg-white'} text-gray-800 flex flex-col transition-colors duration-500`}>
+          <div className={`min-h-screen ${IS_SAO_JOAO ? 'theme-sao-joao bg-[#FAF6F0] isolate' : 'bg-white'} text-gray-800 flex flex-col transition-colors duration-500`}>
             <Navbar />
             {IS_SAO_JOAO && (
               <div className="absolute top-16 left-0 right-0 z-20 pointer-events-none overflow-hidden h-28 sm:h-32">
