@@ -675,6 +675,10 @@
   background-color: #F5EAD4;
 }
 
+.theme-sao-joao .text-emerald-400 {
+  color: #FB923C !important;
+}
+
 .theme-sao-joao .text-emerald-500,
 .theme-sao-joao .text-emerald-600 {
   color: #EA580C !important;
@@ -707,6 +711,48 @@
 .theme-sao-joao .shadow-emerald-500\/25,
 .theme-sao-joao .shadow-emerald-500\/30 {
   --tw-shadow-color: rgba(234, 88, 12, 0.25) !important;
+}
+
+/* Gradient stops overrides for Tailwind classes inside theme-sao-joao */
+.theme-sao-joao .from-emerald-500 {
+  --tw-gradient-from: #EA580C !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(234, 88, 12, 0)) !important;
+}
+
+.theme-sao-joao .to-emerald-600 {
+  --tw-gradient-to: #9A3412 !important;
+}
+
+.theme-sao-joao .to-emerald-700 {
+  --tw-gradient-to: #7C2D12 !important;
+}
+
+.theme-sao-joao .via-emerald-500 {
+  --tw-gradient-via: #F59E0B !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important;
+}
+
+.theme-sao-joao .from-emerald-400 {
+  --tw-gradient-from: #F59E0B !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(245, 158, 11, 0)) !important;
+}
+
+.theme-sao-joao .from-emerald-50 {
+  --tw-gradient-from: #FFF7ED !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 247, 237, 0)) !important;
+}
+
+.theme-sao-joao .to-emerald-50 {
+  --tw-gradient-to: #FFF7ED !important;
+}
+
+.theme-sao-joao .from-emerald-100 {
+  --tw-gradient-from: #FFEDD5 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 237, 213, 0)) !important;
+}
+
+.theme-sao-joao .to-emerald-200\/60 {
+  --tw-gradient-to: rgba(254, 215, 170, 0.6) !important;
 }
 
 @keyframes flame-pulse {

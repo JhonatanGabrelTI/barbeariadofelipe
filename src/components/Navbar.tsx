@@ -110,7 +110,9 @@ export function Navbar() {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="md:hidden p-2 rounded-xl text-gray-600 hover:bg-emerald-50 transition-colors"
+                        className={`md:hidden p-2 rounded-xl text-gray-600 transition-colors ${
+                            IS_SAO_JOAO ? 'hover:bg-orange-50' : 'hover:bg-emerald-50'
+                        }`}
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>

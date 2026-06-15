@@ -79,7 +79,21 @@ export function Home() {
         : defaultServices
 
     return (
-        <div className="min-h-screen" ref={scrollRef}>
+        <div className="min-h-screen relative overflow-hidden" ref={scrollRef}>
+            {/* São João fixed background — covers the entire home page */}
+            {IS_SAO_JOAO && (
+                <>
+                    <img
+                        src="/sao-joao-bg.jpg"
+                        alt=""
+                        className="fixed inset-0 w-full h-full object-cover -z-20"
+                        style={{ objectPosition: 'center bottom' }}
+                    />
+                    <div className="fixed inset-0 -z-10 bg-black/35" />
+                    <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/40 via-transparent to-black/55" />
+                </>
+            )}
+
             {/* ═══════════════ HERO SECTION ═══════════════ */}
             <section 
                 className={`relative min-h-[92vh] flex items-center justify-center overflow-hidden transition-all duration-500`}
@@ -115,17 +129,6 @@ export function Home() {
                     </>
                 ) : (
                     <>
-                        {/* Crisp background using <img> — never blurry */}
-                        <img
-                            src="/sao-joao-bg.jpg"
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{ objectPosition: 'center bottom' }}
-                        />
-                        {/* Dark overlay to increase text contrast and readability */}
-                        <div className="absolute inset-0 bg-black/15 mix-blend-multiply" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />
-
                         {/* --- ANIMATIONS OVERLAY FOR STATIC BACKGROUND --- */}
                         <div className="absolute inset-0 pointer-events-none z-10">
                             {/* Glow effects positioned roughly where the lightbulbs are in the image */}
@@ -225,9 +228,13 @@ export function Home() {
             </section>
 
             {/* ═══════════════ STATS SECTION ═══════════════ */}
-            <section className="py-20 bg-gradient-to-b from-white via-emerald-50/30 to-white relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1/4 bg-gradient-to-r from-emerald-50/50 to-transparent" />
-                <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-emerald-50/50 to-transparent" />
+            <section className={`py-20 relative ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white via-emerald-50/30 to-white'}`}>
+                {!IS_SAO_JOAO && (
+                    <>
+                        <div className="absolute left-0 top-0 bottom-0 w-1/4 bg-gradient-to-r from-emerald-50/50 to-transparent" />
+                        <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-emerald-50/50 to-transparent" />
+                    </>
+                )}
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -239,10 +246,14 @@ export function Home() {
             </section>
 
             {/* ═══════════════ SERVICES SECTION ═══════════════ */}
-            <section className="py-24 bg-gradient-to-b from-white via-gray-50/80 to-white relative overflow-hidden">
+            <section className={`py-24 relative overflow-hidden ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white via-gray-50/80 to-white'}`}>
                 {/* Decorative background elements */}
-                <div className="absolute top-10 left-0 w-64 h-64 bg-emerald-100/20 rounded-full blur-3xl" />
-                <div className="absolute bottom-10 right-0 w-80 h-80 bg-emerald-50/30 rounded-full blur-3xl" />
+                {!IS_SAO_JOAO && (
+                    <>
+                        <div className="absolute top-10 left-0 w-64 h-64 bg-emerald-100/20 rounded-full blur-3xl" />
+                        <div className="absolute bottom-10 right-0 w-80 h-80 bg-emerald-50/30 rounded-full blur-3xl" />
+                    </>
+                )}
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <div className="text-center mb-16 scroll-reveal">
@@ -302,7 +313,7 @@ export function Home() {
             </section>
 
             {/* ═══════════════ TRUST BADGES ═══════════════ */}
-            <section className="py-10 px-4 bg-gradient-to-b from-white to-gray-50/40">
+            <section className={`py-10 px-4 ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white to-gray-50/40'}`}>
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 scroll-reveal">
                         {[
@@ -327,7 +338,11 @@ export function Home() {
             {/* ═══════════════ CTA BANNER ═══════════════ */}
             <section className="py-10 px-4">
                 <div className="max-w-5xl mx-auto scroll-reveal-scale">
-                    <div className="relative bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 rounded-[2rem] p-12 text-white text-center overflow-hidden shadow-2xl shadow-emerald-600/20 animate-gradient">
+                    <div className={`relative rounded-[2rem] p-12 text-white text-center overflow-hidden shadow-2xl transition-all duration-300 ${
+                        IS_SAO_JOAO 
+                            ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 shadow-orange-600/20' 
+                            : 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 shadow-emerald-600/20'
+                    } animate-gradient`}>
                         {/* Decorative */}
                         <div className="absolute top-0 right-0 w-60 h-60 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl animate-blob" />
                         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/3 blur-2xl animate-blob" style={{ animationDelay: '3s' }} />
@@ -359,10 +374,14 @@ export function Home() {
             </section>
 
             {/* ═══════════════ CONTACT CARD SECTION ═══════════════ */}
-            <section className="py-20 bg-gradient-to-b from-white to-gray-50/50">
+            <section className={`py-20 ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white to-gray-50/50'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-xl mx-auto scroll-reveal-scale">
-                        <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 rounded-3xl p-8 text-white shadow-2xl shadow-emerald-500/25 relative overflow-hidden hover-glow">
+                        <div className={`rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden hover-glow transition-all duration-300 ${
+                            IS_SAO_JOAO
+                                ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 shadow-orange-500/25'
+                                : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 shadow-emerald-500/25'
+                        }`}>
                             {/* Decorative animated circles */}
                             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 animate-blob" />
                             <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 animate-blob" style={{ animationDelay: '3s' }} />
@@ -374,7 +393,9 @@ export function Home() {
 
                             <div className="relative space-y-6">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm animate-float shadow-lg shadow-emerald-900/20">
+                                    <div className={`w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm animate-float shadow-lg ${
+                                        IS_SAO_JOAO ? 'shadow-orange-950/20' : 'shadow-emerald-900/20'
+                                    }`}>
                                         <Scissors className="w-8 h-8 text-white" />
                                     </div>
                                     <div>
