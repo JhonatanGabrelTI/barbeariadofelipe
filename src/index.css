@@ -651,6 +651,19 @@
   --background: oklch(0.978 0.015 76.8); /* warm beige background */
   --primary: oklch(0.645 0.246 35.0); /* warm orange primary */
   --ring: oklch(0.645 0.246 35.0);
+  background-image: linear-gradient(to bottom right, #F5EAD4, #FAF6F0, #EAE0C8) !important;
+  position: relative;
+}
+
+.theme-sao-joao::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: radial-gradient(circle, #78350F 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .theme-sao-joao .bg-white {

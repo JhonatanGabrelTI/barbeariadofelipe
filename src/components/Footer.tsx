@@ -1,8 +1,23 @@
 import { Scissors, MapPin, Phone, Clock, Heart } from 'lucide-react'
+import { IS_SAO_JOAO } from '../config'
 
 export function Footer() {
     return (
         <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white overflow-hidden">
+            {IS_SAO_JOAO && (
+                <div className="w-full h-10 relative overflow-hidden flex items-end">
+                    {/* Checkered pattern tablecloth (Toalha xadrez) */}
+                    <div className="absolute inset-x-0 bottom-0 h-5 bg-[#D97706]" style={{
+                        backgroundImage: 'linear-gradient(90deg, rgba(239,68,68,0.85) 50%, transparent 50%), linear-gradient(rgba(239,68,68,0.85) 50%, transparent 50%)',
+                        backgroundSize: '16px 16px'
+                    }} />
+                    {/* Wooden Table surface edge */}
+                    <div className="absolute inset-x-0 bottom-5 h-5 bg-[#78350F] border-t border-[#5F270B]" style={{
+                        backgroundImage: 'linear-gradient(rgba(0,0,0,0.15) 50%, transparent 50%)',
+                        backgroundSize: '100% 2px'
+                    }} />
+                </div>
+            )}
             {/* Decorative gradient overlay */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
             <div className="absolute top-0 left-1/4 w-1/2 h-40 bg-emerald-500/5 blur-3xl rounded-full" />
