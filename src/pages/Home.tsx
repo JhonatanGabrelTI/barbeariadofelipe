@@ -83,11 +83,6 @@ export function Home() {
             {/* ═══════════════ HERO SECTION ═══════════════ */}
             <section 
                 className={`relative min-h-[92vh] flex items-center justify-center overflow-hidden transition-all duration-500`}
-                style={IS_SAO_JOAO ? {
-                    backgroundImage: "url('/sao-joao-bg.jpg')",
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center bottom'
-                } : undefined}
             >
                 {/* Multi-layer gradient background for original theme */}
                 {!IS_SAO_JOAO ? (
@@ -120,6 +115,13 @@ export function Home() {
                     </>
                 ) : (
                     <>
+                        {/* Crisp background using <img> — never blurry */}
+                        <img
+                            src="/sao-joao-bg.jpg"
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{ objectPosition: 'center bottom' }}
+                        />
                         {/* Dark overlay to increase text contrast and readability */}
                         <div className="absolute inset-0 bg-black/15 mix-blend-multiply" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/25" />

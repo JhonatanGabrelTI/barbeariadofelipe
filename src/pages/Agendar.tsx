@@ -309,14 +309,12 @@ export function Agendar() {
             {/* São João fixed background */}
             {IS_SAO_JOAO ? (
                 <>
-                    {/* Fixed crisp background image — viewport-sized, never stretched */}
-                    <div
-                        className="fixed inset-0 -z-20"
-                        style={{
-                            backgroundImage: "url('/sao-joao-bg.jpg')",
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center center',
-                        }}
+                    {/* Crisp background using <img> — never blurry */}
+                    <img
+                        src="/sao-joao-bg.jpg"
+                        alt=""
+                        className="fixed inset-0 w-full h-full object-cover -z-20"
+                        style={{ objectPosition: 'center center' }}
                     />
                     {/* Dark overlay for readability */}
                     <div className="fixed inset-0 -z-10 bg-black/35" />
