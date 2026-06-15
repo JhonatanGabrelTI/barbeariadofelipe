@@ -649,10 +649,51 @@
    ═══════════════════════════════════════ */
 .theme-sao-joao {
   --background: oklch(0.978 0.015 76.8); /* warm beige background */
+  --primary: oklch(0.645 0.246 35.0); /* warm orange primary */
+  --ring: oklch(0.645 0.246 35.0);
 }
 
 .theme-sao-joao .bg-white {
   background-color: #FAF6F0;
+}
+
+.theme-sao-joao .bg-gray-50\/50,
+.theme-sao-joao .bg-gray-50 {
+  background-color: #F5EAD4;
+}
+
+.theme-sao-joao .text-emerald-500,
+.theme-sao-joao .text-emerald-600 {
+  color: #EA580C !important;
+}
+
+.theme-sao-joao .text-emerald-700 {
+  color: #C2410C !important;
+}
+
+.theme-sao-joao .bg-emerald-50 {
+  background-color: #FFF7ED !important;
+  color: #C2410C !important;
+}
+
+.theme-sao-joao .bg-emerald-100 {
+  background-color: #FFEDD5 !important;
+}
+
+.theme-sao-joao .border-emerald-100,
+.theme-sao-joao .border-emerald-200 {
+  border-color: #FED7AA !important;
+}
+
+.theme-sao-joao .bg-emerald-500 {
+  background-color: #EA580C !important;
+  background-image: linear-gradient(to bottom right, #F59E0B, #EA580C, #C2410C) !important;
+}
+
+.theme-sao-joao .shadow-emerald-500\/20,
+.theme-sao-joao .shadow-emerald-500\/25,
+.theme-sao-joao .shadow-emerald-500\/30 {
+  --tw-shadow-color: rgba(234, 88, 12, 0.25) !important;
 }
 
 @keyframes flame-pulse {
