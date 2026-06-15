@@ -310,8 +310,7 @@ export function Agendar() {
             style={IS_SAO_JOAO ? {
                 backgroundImage: "url('/sao-joao-bg.jpg')",
                 backgroundSize: 'cover',
-                backgroundPosition: 'center top',
-                backgroundAttachment: 'fixed',
+                backgroundPosition: 'center center',
             } : undefined}
         >
             {/* São João overlays */}

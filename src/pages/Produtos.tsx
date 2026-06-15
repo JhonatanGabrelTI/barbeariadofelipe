@@ -69,8 +69,7 @@ export function Produtos() {
             style={IS_SAO_JOAO ? {
                 backgroundImage: "url('/sao-joao-bg.jpg')",
                 backgroundSize: 'cover',
-                backgroundPosition: 'center top',
-                backgroundAttachment: 'fixed',
+                backgroundPosition: 'center center',
             } : { background: 'rgb(249,250,251,0.5)' }}
         >
             {/* São João overlays */}
