@@ -798,11 +798,15 @@
 
 .theme-copa .bg-white {
   background-color: #ffffff !important; /* Keep cards truly white for readability */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.1 0 0);
 }
 
 .theme-copa .bg-gray-50\/50,
 .theme-copa .bg-gray-50 {
   background-color: #f9fafb !important; /* Keep light gray backgrounds */
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.1 0 0);
 }
 
 .theme-copa .bg-gray-100 {
