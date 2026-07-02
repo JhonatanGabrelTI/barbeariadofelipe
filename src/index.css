@@ -797,12 +797,88 @@
 }
 
 .theme-copa .bg-white {
-  background-color: #F0FDF4; /* Mint cream white for cards */
+  background-color: #ffffff !important; /* Keep cards truly white for readability */
 }
 
 .theme-copa .bg-gray-50\/50,
 .theme-copa .bg-gray-50 {
-  background-color: #DCFCE7; /* Mint pastel light green */
+  background-color: #f9fafb !important; /* Keep light gray backgrounds */
+}
+
+.theme-copa .bg-gray-100 {
+  background-color: #f3f4f6 !important; /* Step indicator circles stay light */
+}
+
+.theme-copa .border-gray-100 {
+  border-color: #e5e7eb !important; /* Keep card borders visible */
+}
+
+.theme-copa .border-gray-50 {
+  border-color: #f0f0f0 !important;
+}
+
+/* Ensure card text stays dark and readable on white backgrounds */
+.theme-copa .bg-white .text-gray-800,
+.theme-copa .bg-white .text-gray-900 {
+  color: inherit !important;
+}
+
+/* Page-level section headings and text that appear OUTSIDE cards (over the dark bg) must be light */
+.theme-copa main .text-gray-800,
+.theme-copa main .text-gray-900 {
+  color: #f0fdf4 !important;
+}
+.theme-copa main .text-gray-400,
+.theme-copa main .text-gray-500,
+.theme-copa main .text-gray-600 {
+  color: #bbf7d0 !important;
+}
+.theme-copa main .text-gray-300 {
+  color: #a7f3d0 !important;
+}
+
+/* But INSIDE white cards, restore dark text so they're readable */
+.theme-copa main .bg-white .text-gray-800,
+.theme-copa main .bg-white .text-gray-900 {
+  color: #1f2937 !important;
+}
+.theme-copa main .bg-white .text-gray-700 {
+  color: #374151 !important;
+}
+.theme-copa main .bg-white .text-gray-600 {
+  color: #4b5563 !important;
+}
+.theme-copa main .bg-white .text-gray-500 {
+  color: #6b7280 !important;
+}
+.theme-copa main .bg-white .text-gray-400 {
+  color: #9ca3af !important;
+}
+.theme-copa main .bg-white .text-gray-300 {
+  color: #d1d5db !important;
+}
+.theme-copa main .bg-white .text-gray-200 {
+  color: #e5e7eb !important;
+}
+
+/* Calendar specific — calendar cells, navigation, and day labels */
+.theme-copa [role="gridcell"] button {
+  color: #1f2937 !important;
+}
+.theme-copa [role="gridcell"] button:disabled {
+  color: #d1d5db !important;
+}
+.theme-copa [role="gridcell"] button[data-selected="true"],
+.theme-copa [role="gridcell"] button[aria-selected="true"] {
+  color: #ffffff !important;
+}
+.theme-copa .rdp-head_cell,
+.theme-copa th {
+  color: #6b7280 !important;
+}
+.theme-copa .rdp-caption_label,
+.theme-copa .rdp-nav button {
+  color: #374151 !important;
 }
 
 /* Green and Yellow highlights */
