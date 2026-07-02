@@ -8,7 +8,7 @@ import { Home } from '@/pages/Home'
 import { Agendar } from '@/pages/Agendar'
 import { Painel } from '@/pages/Painel'
 import { Produtos } from '@/pages/Produtos'
-import { IS_SAO_JOAO } from './config'
+import { IS_SAO_JOAO, IS_COPA } from './config'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,8 +24,66 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <div className={`min-h-screen ${IS_SAO_JOAO ? 'theme-sao-joao bg-[#FAF6F0] isolate' : 'bg-white'} text-gray-800 flex flex-col transition-colors duration-500`}>
+          <div className={`min-h-screen ${
+            IS_COPA 
+              ? 'theme-copa bg-[#051C12] isolate' 
+              : IS_SAO_JOAO 
+                ? 'theme-sao-joao bg-[#FAF6F0] isolate' 
+                : 'bg-white'
+          } text-gray-800 flex flex-col transition-colors duration-500`}>
             <Navbar />
+            
+            {/* Copa do Mundo Flags and Stars */}
+            {IS_COPA && (
+              <div className="absolute top-16 left-0 right-0 z-20 pointer-events-none overflow-hidden h-28 sm:h-32">
+                <svg className="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* String line */}
+                  <path d="M-10 10 Q 150 70, 300 20 T 600 20 T 900 20 T 1210 10" stroke="#15803D" strokeWidth="2" strokeDasharray="3 3" />
+                  
+                  {/* Flags group (Bandeirinhas do Brasil) */}
+                  {/* First curve flags */}
+                  <polygon points="30,17 60,19 45,60" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="80,21 110,24 95,65" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="130,26 160,28 145,69" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="180,28 210,28 195,69" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="230,26 260,23 245,65" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="280,21 310,18 295,59" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                  {/* Second curve flags */}
+                  <polygon points="330,17 360,17 345,58" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="380,18 410,19 395,60" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="430,20 460,21 445,62" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="480,21 510,21 495,62" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="530,21 560,20 545,61" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="580,18 610,17 595,58" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                  {/* Third curve flags */}
+                  <polygon points="630,17 660,18 645,59" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="680,20 710,21 695,62" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="730,21 760,21 745,62" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="780,21 810,20 795,61" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="830,18 860,17 845,58" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="880,17 910,17 895,58" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                  {/* Fourth curve flags */}
+                  <polygon points="930,18 960,20 945,61" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="980,21 1010,23 995,64" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="1030,24 1060,26 1045,67" fill="#2563EB" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="1080,24 1110,21 1095,62" fill="#22C55E" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+                  <polygon points="1130,19 1160,17 1145,58" fill="#EAB308" className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+
+                  {/* Golden Champions Stars */}
+                  <path d="M 150,53 l 2,4 4,1 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-1 z" fill="#EAB308" className="animate-star-glow filter drop-shadow-[0_0_4px_#EAB308]" />
+                  <path d="M 350,38 l 2,4 4,1 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-1 z" fill="#EAB308" className="animate-star-glow filter drop-shadow-[0_0_4px_#EAB308]" style={{ animationDelay: '0.3s' }} />
+                  <path d="M 500,38 l 2,4 4,1 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-1 z" fill="#EAB308" className="animate-star-glow filter drop-shadow-[0_0_4px_#EAB308]" style={{ animationDelay: '0.6s' }} />
+                  <path d="M 750,38 l 2,4 4,1 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-1 z" fill="#EAB308" className="animate-star-glow filter drop-shadow-[0_0_4px_#EAB308]" style={{ animationDelay: '0.9s' }} />
+                  <path d="M 950,40 l 2,4 4,1 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-1 z" fill="#EAB308" className="animate-star-glow filter drop-shadow-[0_0_4px_#EAB308]" style={{ animationDelay: '1.2s' }} />
+                  <path d="M 1100,34 l 2,4 4,1 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-1 z" fill="#EAB308" className="animate-star-glow filter drop-shadow-[0_0_4px_#EAB308]" style={{ animationDelay: '1.5s' }} />
+                </svg>
+              </div>
+            )}
+
+            {/* São João Flags */}
             {IS_SAO_JOAO && (
               <div className="absolute top-16 left-0 right-0 z-20 pointer-events-none overflow-hidden h-28 sm:h-32">
                 <svg className="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">

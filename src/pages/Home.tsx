@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useServicos } from '@/hooks/useServicos'
 import { Phone, MapPin, Scissors, Star, Clock, Users, ChevronRight, Sparkles, ChevronDown, Shield, Zap, Award } from 'lucide-react'
-import { IS_SAO_JOAO } from '../config'
+import { IS_SAO_JOAO, IS_COPA } from '../config'
 
 const defaultServices = [
     { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-blue-500 to-blue-600' },
@@ -80,6 +80,20 @@ export function Home() {
 
     return (
         <div className="min-h-screen relative overflow-hidden" ref={scrollRef}>
+            {/* Copa do Mundo fixed background — covers the entire home page */}
+            {IS_COPA && (
+                <>
+                    <img
+                        src="/copa-bg.jpg"
+                        alt=""
+                        className="fixed inset-0 w-full h-full object-cover -z-20"
+                        style={{ objectPosition: 'center center' }}
+                    />
+                    <div className="fixed inset-0 -z-10 bg-black/45" />
+                    <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/55 via-transparent to-black/60" />
+                </>
+            )}
+
             {/* São João fixed background — covers the entire home page */}
             {IS_SAO_JOAO && (
                 <>
@@ -98,8 +112,7 @@ export function Home() {
             <section 
                 className={`relative min-h-[92vh] flex items-center justify-center overflow-hidden transition-all duration-500`}
             >
-                {/* Multi-layer gradient background for original theme */}
-                {!IS_SAO_JOAO ? (
+                {!(IS_COPA || IS_SAO_JOAO) ? (
                     <>
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-50" />
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(16,185,129,0.08)_0%,_transparent_50%)]" />
@@ -127,6 +140,27 @@ export function Home() {
                             <Star className="w-10 h-10 text-emerald-400" />
                         </div>
                     </>
+                ) : IS_COPA ? (
+                    <>
+                        {/* --- ANIMATIONS OVERLAY FOR BRASIL COPA BACKGROUND --- */}
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                            {/* Glowing lightbulbs matching the string in the user's background */}
+                            <div className="absolute top-[1.5%] left-[7.5%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" />
+                            <div className="absolute top-[10%] left-[24.5%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.4s' }} />
+                            <div className="absolute top-[9%] left-[48%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.8s' }} />
+                            <div className="absolute top-[4.5%] left-[59%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.2s' }} />
+                            <div className="absolute top-[12.5%] left-[90%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.6s' }} />
+
+                            {/* Floating gold stars rising */}
+                            <div className="absolute bottom-16 right-[30%] sm:right-[32%] w-1.5 h-1.5 bg-yellow-400 rounded-full animate-ping opacity-60" style={{ animationDuration: '2s' }} />
+                            <div className="absolute bottom-20 right-[28%] sm:right-[30%] w-2 h-2 bg-yellow-300 rounded-full animate-float opacity-75" style={{ animationDuration: '3s' }} />
+                            <div className="absolute bottom-24 right-[31%] sm:right-[33%] w-1 h-1 bg-green-400 rounded-full animate-float opacity-50" style={{ animationDuration: '2.5s', animationDelay: '1s' }} />
+                            <div className="absolute bottom-14 right-[33%] sm:right-[35%] w-2.5 h-2.5 bg-yellow-500 rounded-full animate-pulse opacity-80" />
+
+                            {/* Warm stadium glow pulse */}
+                            <div className="absolute bottom-8 right-[27%] sm:right-[30%] w-28 h-28 rounded-full bg-gradient-to-t from-yellow-600/20 to-green-500/0 blur-xl animate-pulse" style={{ animationDuration: '2s' }} />
+                        </div>
+                    </>
                 ) : (
                     <>
                         {/* --- ANIMATIONS OVERLAY FOR STATIC BACKGROUND --- */}
@@ -151,37 +185,48 @@ export function Home() {
                 )}
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center z-20">
-                    {/* Badge */}
                     <div className={`animate-fade-in-up inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 shadow-sm border ${
-                        IS_SAO_JOAO 
-                            ? 'bg-amber-950/80 text-amber-200 border-amber-500/30 backdrop-blur-md' 
-                            : 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border-emerald-200/50'
+                        IS_COPA
+                            ? 'bg-green-950/80 text-yellow-300 border-yellow-500/30 backdrop-blur-md animate-pulse'
+                            : IS_SAO_JOAO 
+                                ? 'bg-amber-950/80 text-amber-200 border-amber-500/30 backdrop-blur-md' 
+                                : 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border-emerald-200/50'
                     }`}>
                         <Sparkles className="w-4 h-4 animate-wiggle" />
-                        <span>{IS_SAO_JOAO ? '🔥 Viva o São João! Venha Arretar seu Estilo!' : 'Barbearia Premium em Sua Cidade'}</span>
+                        <span>
+                            {IS_COPA 
+                                ? '🇧🇷 Rumo ao Hexa! Estilo de Campeão!' 
+                                : IS_SAO_JOAO 
+                                    ? '🔥 Viva o São João! Venha Arretar seu Estilo!' 
+                                    : 'Barbearia Premium em Sua Cidade'}
+                        </span>
                     </div>
 
-                    {/* Title */}
                     <h1 className={`animate-fade-in-delay-1 text-5xl sm:text-6xl lg:text-8xl font-black leading-[1.1] tracking-tight mb-6 ${
-                        IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]' : 'text-gray-900'
+                        IS_COPA || IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]' : 'text-gray-900'
                     }`}>
                         Seu Estilo Impecável{' '}
                         <span className="relative inline-block">
-                            <span className={IS_SAO_JOAO ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 bg-clip-text text-transparent' : 'animate-text-shimmer'}>
+                            <span className={
+                                IS_COPA
+                                    ? 'bg-gradient-to-r from-yellow-400 via-green-400 to-yellow-300 bg-clip-text text-transparent'
+                                    : IS_SAO_JOAO 
+                                        ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 bg-clip-text text-transparent' 
+                                        : 'animate-text-shimmer'
+                            }>
                                 Começa Aqui
                             </span>
                             <svg className="absolute -bottom-2 left-0 w-full animate-underline-draw" viewBox="0 0 300 12" fill="none">
-                                <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 8" stroke={IS_SAO_JOAO ? '#FB923C' : '#10B981'} strokeWidth="3" strokeLinecap="round" />
+                                <path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 8" stroke={IS_COPA ? '#EAB308' : IS_SAO_JOAO ? '#FB923C' : '#10B981'} strokeWidth="3" strokeLinecap="round" />
                             </svg>
                         </span>
                     </h1>
 
-                    {/* Subtitle */}
                     <p className={`animate-fade-in-delay-2 text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed ${
-                        IS_SAO_JOAO ? 'text-orange-100/90 font-medium filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]' : 'text-gray-600'
+                        IS_COPA || IS_SAO_JOAO ? 'text-green-50/90 font-medium filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]' : 'text-gray-600'
                     }`}>
                         Agende seu horário de forma rápida e prática. Oferecemos cortes de qualidade
-                        com o conforto que você merece. <strong className={IS_SAO_JOAO ? 'text-yellow-300 font-extrabold' : 'text-gray-600'}>Sem filas, sem espera.</strong>
+                        com o conforto que você merece. <strong className={IS_COPA ? 'text-yellow-400 font-extrabold' : IS_SAO_JOAO ? 'text-yellow-300 font-extrabold' : 'text-gray-600'}>Sem filas, sem espera.</strong>
                     </p>
 
                     {/* CTA Buttons */}
@@ -189,9 +234,11 @@ export function Home() {
                         <Link to="/agendar">
                             <Button
                                 className={`text-white px-10 py-5 rounded-full text-lg font-bold hover:scale-105 transition-all duration-300 shadow-2xl h-auto group ${
-                                    IS_SAO_JOAO 
-                                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-orange-500/40 animate-pulse' 
-                                        : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-emerald-500/30 animate-pulse-glow'
+                                    IS_COPA
+                                        ? 'bg-gradient-to-r from-green-600 to-yellow-500 hover:from-green-700 hover:to-yellow-600 shadow-green-600/30 animate-pulse'
+                                        : IS_SAO_JOAO 
+                                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-orange-500/40 animate-pulse' 
+                                            : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-emerald-500/30 animate-pulse-glow'
                                 }`}
                             >
                                 Agendar Agora
@@ -202,9 +249,11 @@ export function Home() {
                             <Button 
                                 variant="outline" 
                                 className={`px-8 py-5 rounded-full text-lg font-semibold border-2 h-auto transition-all duration-300 ${
-                                    IS_SAO_JOAO 
-                                        ? 'border-orange-400 text-orange-200 hover:bg-orange-950/20 hover:border-orange-300 bg-black/40 hover:text-white backdrop-blur-sm shadow-xl' 
-                                        : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300'
+                                    IS_COPA
+                                        ? 'border-yellow-400 text-yellow-100 hover:bg-green-950/20 hover:border-yellow-300 bg-black/40 hover:text-white backdrop-blur-sm shadow-xl'
+                                        : IS_SAO_JOAO 
+                                            ? 'border-orange-400 text-orange-200 hover:bg-orange-950/20 hover:border-orange-300 bg-black/40 hover:text-white backdrop-blur-sm shadow-xl' 
+                                            : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300'
                                 }`}
                             >
                                 <Phone className="w-5 h-5 mr-2" />
@@ -212,11 +261,11 @@ export function Home() {
                             </Button>
                         </a>
                     </div>
-                    <p className={`mt-5 text-sm ${IS_SAO_JOAO ? 'text-orange-200/70 font-medium' : 'text-gray-500'}`}>✨ Agende em menos de 1 minuto</p>
+                    <p className={`mt-5 text-sm ${IS_COPA ? 'text-yellow-200/70 font-medium' : IS_SAO_JOAO ? 'text-orange-200/70 font-medium' : 'text-gray-500'}`}>✨ Agende em menos de 1 minuto</p>
                 </div>
 
-                {/* Bottom gradient fade (Only if not Sao Joao to prevent overlaying the wood floor texture) */}
-                {!IS_SAO_JOAO && (
+                {/* Bottom gradient fade (Only if not festive theme to prevent overlaying the background image texture) */}
+                {!(IS_COPA || IS_SAO_JOAO) && (
                     <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
                 )}
 
@@ -228,8 +277,8 @@ export function Home() {
             </section>
 
             {/* ═══════════════ STATS SECTION ═══════════════ */}
-            <section className={`py-20 relative ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white via-emerald-50/30 to-white'}`}>
-                {!IS_SAO_JOAO && (
+            <section className={`py-20 relative ${IS_COPA || IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white via-emerald-50/30 to-white'}`}>
+                {!(IS_COPA || IS_SAO_JOAO) && (
                     <>
                         <div className="absolute left-0 top-0 bottom-0 w-1/4 bg-gradient-to-r from-emerald-50/50 to-transparent" />
                         <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-emerald-50/50 to-transparent" />
@@ -246,9 +295,9 @@ export function Home() {
             </section>
 
             {/* ═══════════════ SERVICES SECTION ═══════════════ */}
-            <section className={`py-24 relative overflow-hidden ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white via-gray-50/80 to-white'}`}>
+            <section className={`py-24 relative overflow-hidden ${IS_COPA || IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white via-gray-50/80 to-white'}`}>
                 {/* Decorative background elements */}
-                {!IS_SAO_JOAO && (
+                {!(IS_COPA || IS_SAO_JOAO) && (
                     <>
                         <div className="absolute top-10 left-0 w-64 h-64 bg-emerald-100/20 rounded-full blur-3xl" />
                         <div className="absolute bottom-10 right-0 w-80 h-80 bg-emerald-50/30 rounded-full blur-3xl" />
@@ -313,7 +362,7 @@ export function Home() {
             </section>
 
             {/* ═══════════════ TRUST BADGES ═══════════════ */}
-            <section className={`py-10 px-4 ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white to-gray-50/40'}`}>
+            <section className={`py-10 px-4 ${IS_COPA || IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white to-gray-50/40'}`}>
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 scroll-reveal">
                         {[
@@ -339,9 +388,11 @@ export function Home() {
             <section className="py-10 px-4">
                 <div className="max-w-5xl mx-auto scroll-reveal-scale">
                     <div className={`relative rounded-[2rem] p-12 text-white text-center overflow-hidden shadow-2xl transition-all duration-300 ${
-                        IS_SAO_JOAO 
-                            ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 shadow-orange-600/20' 
-                            : 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 shadow-emerald-600/20'
+                        IS_COPA
+                            ? 'bg-gradient-to-r from-green-700 via-green-600 to-yellow-600 shadow-green-600/20'
+                            : IS_SAO_JOAO 
+                                ? 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 shadow-orange-600/20' 
+                                : 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 shadow-emerald-600/20'
                     } animate-gradient`}>
                         {/* Decorative */}
                         <div className="absolute top-0 right-0 w-60 h-60 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl animate-blob" />
@@ -374,13 +425,15 @@ export function Home() {
             </section>
 
             {/* ═══════════════ CONTACT CARD SECTION ═══════════════ */}
-            <section className={`py-20 ${IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white to-gray-50/50'}`}>
+            <section className={`py-20 ${IS_COPA || IS_SAO_JOAO ? 'bg-transparent' : 'bg-gradient-to-b from-white to-gray-50/50'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="max-w-xl mx-auto scroll-reveal-scale">
                         <div className={`rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden hover-glow transition-all duration-300 ${
-                            IS_SAO_JOAO
-                                ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 shadow-orange-500/25'
-                                : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 shadow-emerald-500/25'
+                            IS_COPA
+                                ? 'bg-gradient-to-br from-green-700 via-green-600 to-yellow-600 shadow-green-500/25'
+                                : IS_SAO_JOAO
+                                    ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 shadow-orange-500/25'
+                                    : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 shadow-emerald-500/25'
                         }`}>
                             {/* Decorative animated circles */}
                             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 animate-blob" />
@@ -394,7 +447,7 @@ export function Home() {
                             <div className="relative space-y-6">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm animate-float shadow-lg ${
-                                        IS_SAO_JOAO ? 'shadow-orange-950/20' : 'shadow-emerald-900/20'
+                                        IS_COPA ? 'shadow-green-950/20' : IS_SAO_JOAO ? 'shadow-orange-950/20' : 'shadow-emerald-900/20'
                                     }`}>
                                         <Scissors className="w-8 h-8 text-white" />
                                     </div>

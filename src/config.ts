@@ -1,3 +1,4 @@
 // Configurações globais do site
-// Altere IS_SAO_JOAO para false no mês que vem para voltar ao modelo original do site.
-export const IS_SAO_JOAO = true;
+// Altere as flags para ativar ou desativar os temas sazonais.
+export const IS_SAO_JOAO = false;
+export const IS_COPA = true;

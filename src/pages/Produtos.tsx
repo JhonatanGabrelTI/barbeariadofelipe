@@ -3,7 +3,7 @@ import { Coffee, ShoppingBag, Check, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useProdutos } from '@/hooks/useProdutos'
-import { IS_SAO_JOAO } from '../config'
+import { IS_SAO_JOAO, IS_COPA } from '../config'
 
 const categoryLabels: Record<string, string> = {
     bebida: 'Bebidas & Cafés',
@@ -67,8 +67,28 @@ export function Produtos() {
             className="min-h-screen pt-24 pb-16 px-4 relative overflow-hidden"
             ref={scrollRef}
         >
-            {/* São João fixed background */}
-            {IS_SAO_JOAO ? (
+            {/* Copa do Mundo fixed background */}
+            {IS_COPA ? (
+                <>
+                    {/* Crisp background using <img> — never blurry */}
+                    <img
+                        src="/copa-bg.jpg"
+                        alt=""
+                        className="fixed inset-0 w-full h-full object-cover -z-20"
+                        style={{ objectPosition: 'center center' }}
+                    />
+                    <div className="fixed inset-0 -z-10 bg-black/45" />
+                    <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/55 via-transparent to-black/60" />
+                    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -9 }}>
+                        {/* Glowing lightbulbs matching the string in the user's background */}
+                        <div className="absolute top-[1.5%] left-[7.5%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" />
+                        <div className="absolute top-[10%] left-[24.5%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.4s' }} />
+                        <div className="absolute top-[9%] left-[48%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.8s' }} />
+                        <div className="absolute top-[4.5%] left-[59%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.2s' }} />
+                        <div className="absolute top-[12.5%] left-[90%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.6s' }} />
+                    </div>
+                </>
+            ) : IS_SAO_JOAO ? (
                 <>
                     {/* Crisp background using <img> — never blurry */}
                     <img
@@ -92,10 +112,10 @@ export function Produtos() {
             <div className="max-w-7xl mx-auto relative z-10">
                 <div className="text-center mb-16 animate-fade-in-up">
                     <h1 className={`text-4xl sm:text-5xl font-black mb-4 tracking-tight ${
-                        IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]' : 'text-gray-900'
+                        IS_COPA || IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]' : 'text-gray-900'
                     }`}>Produtos & Bebidas</h1>
                     <p className={`text-lg max-w-2xl mx-auto animate-fade-in-delay-1 ${
-                        IS_SAO_JOAO ? 'text-orange-100/90 font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : 'text-gray-500'
+                        IS_COPA ? 'text-green-50/95 font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : IS_SAO_JOAO ? 'text-orange-100/90 font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : 'text-gray-500'
                     }`}>
                         Aproveite nossa seleção exclusiva de produtos para cuidar do seu visual em casa e nossas bebidas premium enquanto aguarda.
                     </p>

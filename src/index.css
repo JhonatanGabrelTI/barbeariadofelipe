@@ -772,4 +772,126 @@
 
 .animate-bulb-glow {
   animation: bulb-glow 1.5s infinite alternate ease-in-out;
-}
+}
+
+/* ═══════════════════════════════════════
+   WORLD CUP BRASIL TEMPORARY THEME SYSTEM
+   ═══════════════════════════════════════ */
+.theme-copa {
+  --background: oklch(0.15 0.05 140); /* deep forest green background */
+  --primary: oklch(0.75 0.25 90); /* Brazilian gold/yellow */
+  --ring: oklch(0.75 0.25 90);
+  background-image: linear-gradient(to bottom right, #052215, #081A12, #02120B) !important;
+  position: relative;
+}
+
+.theme-copa::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: radial-gradient(circle, #EAB308 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.theme-copa .bg-white {
+  background-color: #F0FDF4; /* Mint cream white for cards */
+}
+
+.theme-copa .bg-gray-50\/50,
+.theme-copa .bg-gray-50 {
+  background-color: #DCFCE7; /* Mint pastel light green */
+}
+
+/* Green and Yellow highlights */
+.theme-copa .text-emerald-400 {
+  color: #FACC15 !important; /* Gold yellow */
+}
+
+.theme-copa .text-emerald-500,
+.theme-copa .text-emerald-600 {
+  color: #16A34A !important; /* Vibrant Brazilian green */
+}
+
+.theme-copa .text-emerald-700 {
+  color: #15803D !important; /* Deep green */
+}
+
+.theme-copa .bg-emerald-50 {
+  background-color: #FEF08A !important; /* Soft yellow bg */
+  color: #15803D !important; /* Green text */
+}
+
+.theme-copa .bg-emerald-100 {
+  background-color: #FEF08A !important;
+}
+
+.theme-copa .border-emerald-100,
+.theme-copa .border-emerald-200 {
+  border-color: #FDE047 !important; /* Yellow border */
+}
+
+.theme-copa .bg-emerald-500 {
+  background-color: #16A34A !important;
+  background-image: linear-gradient(to bottom right, #22C55E, #16A34A, #15803D) !important;
+}
+
+.theme-copa .shadow-emerald-500\/20,
+.theme-copa .shadow-emerald-500\/25,
+.theme-copa .shadow-emerald-500\/30 {
+  --tw-shadow-color: rgba(22, 163, 74, 0.25) !important;
+}
+
+/* Gradient stops overrides for Tailwind classes inside theme-copa */
+.theme-copa .from-emerald-500 {
+  --tw-gradient-from: #16A34A !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(22, 163, 74, 0)) !important;
+}
+
+.theme-copa .to-emerald-600 {
+  --tw-gradient-to: #EAB308 !important; /* Gold yellow */
+}
+
+.theme-copa .to-emerald-700 {
+  --tw-gradient-to: #CA8A04 !important; /* Dark gold */
+}
+
+.theme-copa .via-emerald-500 {
+  --tw-gradient-via: #EAB308 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important;
+}
+
+.theme-copa .from-emerald-400 {
+  --tw-gradient-from: #EAB308 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(234, 179, 8, 0)) !important;
+}
+
+.theme-copa .from-emerald-50 {
+  --tw-gradient-from: #FEF9C3 !important; /* light yellow */
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(254, 249, 195, 0)) !important;
+}
+
+.theme-copa .to-emerald-50 {
+  --tw-gradient-to: #FEF9C3 !important;
+}
+
+.theme-copa .from-emerald-100 {
+  --tw-gradient-from: #FEF08A !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(254, 240, 138, 0)) !important;
+}
+
+.theme-copa .to-emerald-200\/60 {
+  --tw-gradient-to: rgba(254, 240, 138, 0.6) !important;
+}
+
+/* Animations specific to Copa */
+@keyframes star-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 2px #EAB308); }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 10px #FACC15); }
+}
+
+.animate-star-glow {
+  animation: star-pulse 1.8s infinite alternate ease-in-out;
+}

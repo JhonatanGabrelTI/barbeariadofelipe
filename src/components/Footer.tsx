@@ -1,9 +1,16 @@
 import { Scissors, MapPin, Phone, Clock, Heart } from 'lucide-react'
-import { IS_SAO_JOAO } from '../config'
+import { IS_SAO_JOAO, IS_COPA } from '../config'
 
 export function Footer() {
     return (
         <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white overflow-hidden">
+            {IS_COPA && (
+                <div className="w-full h-4 relative overflow-hidden flex flex-col">
+                    {/* Green and Yellow stripes representing Brazil */}
+                    <div className="h-2 bg-[#16A34A]" />
+                    <div className="h-2 bg-[#EAB308]" />
+                </div>
+            )}
             {IS_SAO_JOAO && (
                 <div className="w-full h-10 relative overflow-hidden flex items-end">
                     {/* Checkered pattern tablecloth (Toalha xadrez) */}

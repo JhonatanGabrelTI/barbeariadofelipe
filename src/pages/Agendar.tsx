@@ -20,7 +20,7 @@ import { toast } from 'sonner'
 import { format, addDays, addMinutes, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info, Phone, RefreshCw, Sparkles, ChevronRight, Shield } from 'lucide-react'
-import { IS_SAO_JOAO } from '../config'
+import { IS_SAO_JOAO, IS_COPA } from '../config'
 
 const defaultServices = [
     { id: 'corte-cabelo', name: 'Corte de Cabelo', price: 'R$ 35', duration: 30 },
@@ -306,8 +306,35 @@ export function Agendar() {
 
     return (
         <div className="min-h-screen pt-24 pb-16 px-4 relative overflow-hidden">
-            {/* São João fixed background */}
-            {IS_SAO_JOAO ? (
+            {/* Copa do Mundo fixed background */}
+            {IS_COPA ? (
+                <>
+                    {/* Crisp background using <img> — never blurry */}
+                    <img
+                        src="/copa-bg.jpg"
+                        alt=""
+                        className="fixed inset-0 w-full h-full object-cover -z-20"
+                        style={{ objectPosition: 'center center' }}
+                    />
+                    {/* Dark overlay for readability */}
+                    <div className="fixed inset-0 -z-10 bg-black/45" />
+                    <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/55 via-transparent to-black/60" />
+                    {/* Animated overlay effects */}
+                    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -9 }}>
+                        {/* Glowing lightbulbs matching the string in the user's background */}
+                        <div className="absolute top-[1.5%] left-[7.5%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" />
+                        <div className="absolute top-[10%] left-[24.5%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.4s' }} />
+                        <div className="absolute top-[9%] left-[48%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '0.8s' }} />
+                        <div className="absolute top-[4.5%] left-[59%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.2s' }} />
+                        <div className="absolute top-[12.5%] left-[90%] w-7 h-7 rounded-full bg-yellow-300/40 blur-md animate-pulse-glow" style={{ animationDelay: '1.6s' }} />
+
+                        {/* Floating stars rising */}
+                        <div className="absolute bottom-16 right-[25%] w-2 h-2 bg-yellow-400 rounded-full animate-float opacity-70" style={{ animationDuration: '2.5s' }} />
+                        <div className="absolute bottom-24 right-[22%] w-1.5 h-1.5 bg-yellow-300 rounded-full animate-float opacity-60" style={{ animationDuration: '3s', animationDelay: '0.7s' }} />
+                        <div className="absolute bottom-20 right-[28%] w-1 h-1 bg-green-400 rounded-full animate-float opacity-50" style={{ animationDuration: '2s', animationDelay: '1.2s' }} />
+                    </div>
+                </>
+            ) : IS_SAO_JOAO ? (
                 <>
                     {/* Crisp background using <img> — never blurry */}
                     <img
@@ -347,32 +374,33 @@ export function Agendar() {
             )}
 
             <div className="max-w-4xl mx-auto relative">
-                {/* Header */}
                 <div className="text-center mb-10 animate-fade-in-up">
                     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border shadow-sm ${
-                        IS_SAO_JOAO
-                            ? 'bg-amber-950/80 text-amber-200 border-amber-500/30 backdrop-blur-md'
-                            : 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border-emerald-200/50'
+                        IS_COPA
+                            ? 'bg-green-950/80 text-yellow-300 border-yellow-500/30 backdrop-blur-md animate-pulse'
+                            : IS_SAO_JOAO
+                                ? 'bg-amber-950/80 text-amber-200 border-amber-500/30 backdrop-blur-md'
+                                : 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border-emerald-200/50'
                     }`}>
                         <Scissors className="w-3.5 h-3.5" />
-                        {IS_SAO_JOAO ? '🌟 Agendamento Online' : 'Agendamento Online'}
+                        {IS_COPA ? '🇧🇷 Rumo ao Hexa!' : IS_SAO_JOAO ? '🌟 Agendamento Online' : 'Agendamento Online'}
                     </div>
                     <h1 className={`text-4xl sm:text-5xl font-extrabold mb-3 tracking-tight ${
-                        IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]' : 'text-gray-900'
+                        IS_COPA || IS_SAO_JOAO ? 'text-white filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]' : 'text-gray-900'
                     }`}>
                         Agendar{' '}
-                        <span className={IS_SAO_JOAO ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 bg-clip-text text-transparent' : 'animate-text-shimmer'}>Horário</span>
+                        <span className={IS_COPA ? 'bg-gradient-to-r from-yellow-400 via-green-400 to-yellow-300 bg-clip-text text-transparent' : IS_SAO_JOAO ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-300 bg-clip-text text-transparent' : 'animate-text-shimmer'}>Horário</span>
                     </h1>
                     {user ? (
-                        <p className={IS_SAO_JOAO ? 'text-orange-100/90 text-lg font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : 'text-gray-500 text-lg'}>
-                            Olá, <span className={IS_SAO_JOAO ? 'text-yellow-300 font-semibold' : 'text-emerald-600 font-semibold'}>{user.user_metadata?.full_name || user.email}</span>! 👋
+                        <p className={IS_COPA ? 'text-green-50/90 text-lg font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : IS_SAO_JOAO ? 'text-orange-100/90 text-lg font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : 'text-gray-500 text-lg'}>
+                            Olá, <span className={IS_COPA ? 'text-yellow-400 font-semibold' : IS_SAO_JOAO ? 'text-yellow-300 font-semibold' : 'text-emerald-600 font-semibold'}>{user.user_metadata?.full_name || user.email}</span>! 👋
                         </p>
                     ) : (
                         <div className="space-y-1">
-                            <p className={IS_SAO_JOAO ? 'text-orange-100/90 text-lg font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : 'text-gray-500 text-lg'}>Agende seu corte rápido e fácil!</p>
+                            <p className={IS_COPA ? 'text-green-50/90 text-lg font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : IS_SAO_JOAO ? 'text-orange-100/90 text-lg font-medium filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]' : 'text-gray-500 text-lg'}>Agende seu corte rápido e fácil!</p>
                             <button
                                 onClick={() => setShowLoginDialog(true)}
-                                className={IS_SAO_JOAO ? 'text-yellow-300 text-sm font-semibold hover:underline' : 'text-emerald-600 text-sm font-semibold hover:underline'}
+                                className={IS_COPA ? 'text-yellow-400 text-sm font-semibold hover:underline' : IS_SAO_JOAO ? 'text-yellow-300 text-sm font-semibold hover:underline' : 'text-emerald-600 text-sm font-semibold hover:underline'}
                             >
                                 Já tem conta? Clique aqui para entrar
                             </button>
