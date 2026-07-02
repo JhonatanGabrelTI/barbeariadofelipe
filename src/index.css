@@ -830,34 +830,53 @@
 }
 .theme-copa main .text-gray-400,
 .theme-copa main .text-gray-500,
-.theme-copa main .text-gray-600 {
+.theme-copa main .text-gray-600,
+.theme-copa main .text-gray-700 {
   color: #bbf7d0 !important;
 }
 .theme-copa main .text-gray-300 {
   color: #a7f3d0 !important;
 }
 
-/* But INSIDE white cards, restore dark text so they're readable */
+/* But INSIDE white cards (or ON white cards), restore dark text so they're readable */
 .theme-copa main .bg-white .text-gray-800,
-.theme-copa main .bg-white .text-gray-900 {
+.theme-copa main .bg-white.text-gray-800,
+.theme-copa main .bg-white .text-gray-900,
+.theme-copa main .bg-white.text-gray-900,
+.theme-copa main .bg-gray-50 .text-gray-900,
+.theme-copa main .bg-gray-50.text-gray-900 {
   color: #1f2937 !important;
 }
-.theme-copa main .bg-white .text-gray-700 {
+.theme-copa main .bg-white .text-gray-700,
+.theme-copa main .bg-white.text-gray-700,
+.theme-copa main .bg-gray-50 .text-gray-700,
+.theme-copa main .bg-gray-50.text-gray-700 {
   color: #374151 !important;
 }
-.theme-copa main .bg-white .text-gray-600 {
+.theme-copa main .bg-white .text-gray-600,
+.theme-copa main .bg-white.text-gray-600,
+.theme-copa main .bg-gray-50 .text-gray-600,
+.theme-copa main .bg-gray-50.text-gray-600 {
   color: #4b5563 !important;
 }
-.theme-copa main .bg-white .text-gray-500 {
+.theme-copa main .bg-white .text-gray-500,
+.theme-copa main .bg-white.text-gray-500,
+.theme-copa main .bg-gray-50 .text-gray-500,
+.theme-copa main .bg-gray-50.text-gray-500 {
   color: #6b7280 !important;
 }
-.theme-copa main .bg-white .text-gray-400 {
+.theme-copa main .bg-white .text-gray-400,
+.theme-copa main .bg-white.text-gray-400,
+.theme-copa main .bg-gray-50 .text-gray-400,
+.theme-copa main .bg-gray-50.text-gray-400 {
   color: #9ca3af !important;
 }
-.theme-copa main .bg-white .text-gray-300 {
+.theme-copa main .bg-white .text-gray-300,
+.theme-copa main .bg-white.text-gray-300 {
   color: #d1d5db !important;
 }
-.theme-copa main .bg-white .text-gray-200 {
+.theme-copa main .bg-white .text-gray-200,
+.theme-copa main .bg-white.text-gray-200 {
   color: #e5e7eb !important;
 }
 
