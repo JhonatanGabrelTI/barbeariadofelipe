@@ -37,15 +37,22 @@ export function useAgendamentosPublic(date?: string) {
         queryFn: async () => {
             if (!date) return []
 
-            // Query a wide UTC window; timezone filtering is handled correctly in JS comparisons
-            const startOfDay = `${date}T00:00:00.000Z`
-            const endOfDay = `${date}T23:59:59.999Z`
+            // Query a wider window (3 days) to guarantee that timezone differences 
+            // between UTC and local time never clip valid appointments at the edges of the day.
+            const d = new Date(date)
+            const prev = new Date(d)
+            prev.setDate(prev.getDate() - 1)
+            const next = new Date(d)
+            next.setDate(next.getDate() + 1)
+
+            const startStr = `${prev.toISOString().split('T')[0]}T00:00:00.000Z`
+            const endStr = `${next.toISOString().split('T')[0]}T23:59:59.999Z`
 
             const { data, error } = await supabase
                 .from('agendamentos')
                 .select('data_hora, servico, status, duracao_minutos')
-                .gte('data_hora', startOfDay)
-                .lte('data_hora', endOfDay)
+                .gte('data_hora', startStr)
+                .lte('data_hora', endStr)
                 .neq('status', 'cancelado')
 
             if (error) throw error
@@ -53,7 +60,7 @@ export function useAgendamentosPublic(date?: string) {
         },
         enabled: !!date,
         staleTime: 0,                   // Always consider data stale — never serve from cache
-        refetchInterval: 1000 * 10,     // Poll every 10 seconds as fallback (was 30s)
+        refetchInterval: 1000 * 5,      // Poll every 5 seconds as fallback (was 10s)
         refetchOnWindowFocus: true,     // Refetch when user returns to tab
         refetchOnMount: 'always',       // Always refetch when component mounts
     })

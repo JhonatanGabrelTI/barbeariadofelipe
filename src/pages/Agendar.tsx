@@ -210,7 +210,9 @@ export function Agendar() {
     const isSlotDirectlyOccupied = useCallback((slotStart: Date) => {
         const slotEnd = addMinutes(slotStart, 30)
         for (const a of publicAgendamentos) {
-            const bookingStart = new Date(a.data_hora!)
+            // Safari compatibility: replace space with T if missing, though Supabase timestamptz usually provides it.
+            const safeDateStr = a.data_hora!.replace(' ', 'T')
+            const bookingStart = new Date(safeDateStr)
             const bookingDuration = (a as any).duracao_minutos || 30
             const bookingEnd = addMinutes(bookingStart, bookingDuration)
             if (slotStart < bookingEnd && slotEnd > bookingStart) {
@@ -252,7 +254,8 @@ export function Agendar() {
         // 5. For services > 30min, check if the extended time overlaps with occupied slots
         if (selectedDuration > 30) {
             for (const a of publicAgendamentos) {
-                const bookingStart = new Date(a.data_hora!)
+                const safeDateStr = a.data_hora!.replace(' ', 'T')
+                const bookingStart = new Date(safeDateStr)
                 const bookingDuration = (a as any).duracao_minutos || 30
                 const bookingEnd = addMinutes(bookingStart, bookingDuration)
 
