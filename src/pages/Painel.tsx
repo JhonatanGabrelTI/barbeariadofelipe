@@ -62,6 +62,7 @@ export function Painel() {
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('todos')
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('hoje')
     const [activeTab, setActiveTab] = useState<Tab>('agendamentos')
+    const [showHistoryModal, setShowHistoryModal] = useState(false)
 
     // Blocked clients hook and states
     const { blockedClients, isLoading: isLoadingBlocked, blockClient, unblockClient } = useBlockedClients()
@@ -163,6 +164,18 @@ export function Painel() {
         return filtered
     }, [allAgendamentos, filterStatus, filterPeriod])
 
+    const availableMonths = useMemo(() => {
+        const months = new Set<string>()
+        allAgendamentos.forEach(a => {
+            const d = new Date(a.data_hora)
+            const monthStr = format(d, 'yyyy-MM')
+            months.add(monthStr)
+        })
+        const currentMonth = format(new Date(), 'yyyy-MM')
+        months.add(currentMonth)
+        return Array.from(months).sort().reverse()
+    }, [allAgendamentos])
+
     const stats = useMemo(() => {
         const today = startOfDay(new Date())
         const todayAppointments = allAgendamentos.filter(a => {
@@ -177,15 +190,42 @@ export function Painel() {
             return acc + price
         }, 0)
 
+        const now = new Date()
+        const startOfSecondDay = new Date(now.getFullYear(), now.getMonth(), 2)
+        const endOfSelectedMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
         const totalConfirmedRevenue = allAgendamentos
             .filter(a => a.status === 'confirmado' || a.status === 'realizado')
+            .filter(a => {
+                const d = new Date(a.data_hora)
+                return d >= startOfSecondDay && d <= endOfSelectedMonth
+            })
             .reduce((acc, a) => {
                 const price = servicePrices[a.servico] || 0
                 return acc + price
             }, 0)
 
         return { todayCount: todayAppointments.length, confirmed, completed, total: allAgendamentos.length, todayRevenue, totalConfirmedRevenue }
-    }, [allAgendamentos])
+    }, [allAgendamentos, servicePrices])
+
+    // Historico mensal
+    const historyByMonth = useMemo(() => {
+        return availableMonths.map(m => {
+            const [year, month] = m.split('-').map(Number)
+            const startOfSecondDay = new Date(year, month - 1, 2)
+            const endOfSelectedMonth = new Date(year, month, 0, 23, 59, 59, 999)
+            
+            const revenue = allAgendamentos
+                .filter(a => a.status === 'confirmado' || a.status === 'realizado')
+                .filter(a => {
+                    const d = new Date(a.data_hora)
+                    return d >= startOfSecondDay && d <= endOfSelectedMonth
+                })
+                .reduce((acc, a) => acc + (servicePrices[a.servico] || 0), 0)
+                
+            return { month: m, revenue }
+        })
+    }, [availableMonths, allAgendamentos, servicePrices])
 
     const handleUpdateStatus = async (id: string, status: string) => {
         try {
@@ -452,20 +492,31 @@ export function Painel() {
                         </div>
                         <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 shadow-lg shadow-emerald-500/20 text-white">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <DollarSign className="w-5 h-5 text-white" />
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 shadow-lg shadow-emerald-500/20 text-white flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    <DollarSign className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="text-sm text-emerald-50 font-medium">Ganhos de Hoje</span>
                             </div>
-                            <span className="text-sm text-emerald-50 font-medium">Ganhos de Hoje</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-sm font-medium text-emerald-100">R$</span>
+                                <p className="text-3xl font-black">{stats.todayRevenue}</p>
+                            </div>
                         </div>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-sm font-medium text-emerald-100">R$</span>
-                            <p className="text-3xl font-black">{stats.todayRevenue}</p>
+                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-emerald-400/30">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-emerald-100 opacity-90 uppercase tracking-wider font-bold">Total Previsto</span>
+                                <span className="text-sm font-bold text-white">R$ {stats.totalConfirmedRevenue}</span>
+                            </div>
+                            <button
+                                onClick={() => setShowHistoryModal(true)}
+                                className="bg-white/10 hover:bg-white/20 text-emerald-50 text-[10px] font-bold border border-white/20 rounded-lg px-3 py-1.5 outline-none transition-all active:scale-95 uppercase tracking-wider"
+                            >
+                                Ver Histórico
+                            </button>
                         </div>
-                        <p className="text-[10px] text-emerald-100 mt-2 opacity-80 uppercase tracking-wider font-bold">
-                            Total Previsto: R$ {stats.totalConfirmedRevenue}
-                        </p>
                     </div>
                 </div>
 
@@ -1057,6 +1108,43 @@ export function Painel() {
                             className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl h-11 px-5 shadow-lg shadow-red-200"
                         >
                             {blockClient.isPending ? 'Bloqueando...' : 'Confirmar Bloqueio'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal de Histórico de Ganhos Previstos */}
+            <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+                <DialogContent className="sm:max-w-md rounded-2xl bg-white border border-gray-100">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-emerald-600">
+                            <DollarSign className="w-5 h-5" />
+                            Histórico de Ganhos Previstos
+                        </DialogTitle>
+                        <DialogDescription>
+                            Ganhos previstos contabilizados a partir do dia 2 de cada mês.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-72 overflow-y-auto pr-2 space-y-2 mt-2">
+                        {historyByMonth.map(item => {
+                            const [y, mo] = item.month.split('-')
+                            const date = new Date(Number(y), Number(mo) - 1)
+                            const monthName = format(date, 'MMMM yyyy', { locale: ptBR })
+                            return (
+                                <div key={item.month} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                                    <span className="text-sm font-semibold text-gray-700 capitalize">{monthName}</span>
+                                    <span className="text-sm font-bold text-emerald-600">R$ {item.revenue}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <div className="flex justify-end mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowHistoryModal(false)}
+                            className="rounded-xl font-medium hover:bg-gray-50"
+                        >
+                            Fechar
                         </Button>
                     </div>
                 </DialogContent>
