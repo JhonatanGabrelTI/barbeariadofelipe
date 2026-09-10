@@ -10,6 +10,7 @@ import { GerenciarProdutos } from '@/components/GerenciarProdutos'
 import { ConfigurarServicos } from '@/components/ConfigurarServicos'
 import { Financeiro } from '@/components/Financeiro'
 import { BARBEIROS, getBarbeiro } from '@/data/barbeiros'
+import { supabase } from '@/lib/supabase'
 import { useBlockedClients } from '@/hooks/useBlockedClients'
 import { Input } from '@/components/ui/input'
 import {
@@ -46,6 +47,7 @@ import {
     Trash2,
     Search,
     UserX,
+    Download,
 } from 'lucide-react'
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
@@ -110,6 +112,7 @@ export function Painel() {
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('hoje')
     const [activeTab, setActiveTab] = useState<Tab>('agendamentos')
     const [showHistoryModal, setShowHistoryModal] = useState(false)
+    const [isExportingBackup, setIsExportingBackup] = useState(false)
     const [selectedStaffId, setSelectedStaffId] = useState('')
     const managedStaffId = isOwner ? (selectedStaffId || currentStaff?.id || '') : (currentStaff?.id || '')
     const managedStaff = staffMembers.find(member => member.id === managedStaffId) || currentStaff
@@ -288,6 +291,48 @@ export function Painel() {
             toast.success(`✅ Agendamento ${label}!`)
         } catch {
             toast.error('❌ Erro ao atualizar status.')
+        }
+    }
+
+    const handleExportBackup = async () => {
+        if (!isOwner || isPreview) return
+        setIsExportingBackup(true)
+        try {
+            const tableNames = [
+                'agendamentos',
+                'servicos',
+                'produtos',
+                'blocked_slots',
+                'blocked_clients',
+                'whatsapp_config',
+                'admin_emails',
+            ] as const
+            const backup: Record<string, unknown> = {
+                exported_at: new Date().toISOString(),
+                source: 'felipe-barbearia-owner-panel',
+            }
+
+            for (const table of tableNames) {
+                const { data, error } = await supabase.from(table).select('*')
+                if (error) throw new Error(`${table}: ${error.message}`)
+                backup[table] = data || []
+            }
+
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const anchor = document.createElement('a')
+            anchor.href = url
+            anchor.download = `barbearia-backup-${format(new Date(), 'yyyy-MM-dd-HHmm')}.json`
+            document.body.appendChild(anchor)
+            anchor.click()
+            anchor.remove()
+            URL.revokeObjectURL(url)
+            toast.success('✅ Backup completo baixado com sucesso!')
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Falha desconhecida'
+            toast.error('❌ Não foi possível exportar o backup.', { description: message })
+        } finally {
+            setIsExportingBackup(false)
         }
     }
 
@@ -492,13 +537,24 @@ export function Painel() {
                         </p>
                     </div>
                     {isOwner && (
-                        <Button
-                            onClick={() => setActiveTab('servicos')}
-                            className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200 gap-2 h-12 px-6 transition-all hover:scale-105 active:scale-95"
-                        >
-                            <Scissors className="w-5 h-5" />
-                            Ajustar Preços e Tempos
-                        </Button>
+                        <div className="flex flex-wrap gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={handleExportBackup}
+                                disabled={isExportingBackup || isPreview}
+                                className="border-violet-200 text-violet-700 hover:bg-violet-50 font-bold rounded-xl gap-2 h-12 px-6"
+                            >
+                                <Download className="w-5 h-5" />
+                                {isExportingBackup ? 'Gerando backup...' : 'Exportar backup'}
+                            </Button>
+                            <Button
+                                onClick={() => setActiveTab('servicos')}
+                                className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200 gap-2 h-12 px-6 transition-all hover:scale-105 active:scale-95"
+                            >
+                                <Scissors className="w-5 h-5" />
+                                Ajustar Preços e Tempos
+                            </Button>
+                        </div>
                     )}
                 </div>
 
