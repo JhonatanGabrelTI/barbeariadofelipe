@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "create:eliabner": "node scripts/create-eliabner-user.mjs"
+    "create:eliabner": "node scripts/create-eliabner-user.mjs",
+    "import:backup": "node scripts/import-backup.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",

@@ -17,7 +17,13 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null, multi
     const { data: blockedSlots = [], isLoading } = useQuery({
         queryKey: ['blocked-slots', date, barbeiroId, multiBarberEnabled],
         queryFn: async () => {
-            let query = supabase.from('blocked_slots').select('*').order('data', { ascending: true })
+            const selectedFields: string = multiBarberEnabled
+                ? 'id,data,hora_inicio,hora_fim,motivo,barbeiro_id,created_at'
+                : 'id,data,hora_inicio,hora_fim,motivo,created_at'
+            let query = supabase
+                .from('blocked_slots')
+                .select(selectedFields)
+                .order('data', { ascending: true })
 
             if (date) {
                 query = query.eq('data', date)
@@ -28,7 +34,7 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null, multi
 
             const { data, error } = await query
             if (error) throw error
-            return (data || []) as BlockedSlot[]
+            return (data || []) as unknown as BlockedSlot[]
         },
         enabled: !!barbeiroId,
     })

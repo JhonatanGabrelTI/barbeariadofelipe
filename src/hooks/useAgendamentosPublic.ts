@@ -48,18 +48,23 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null,
             const startStr = `${prev.toISOString().split('T')[0]}T00:00:00.000Z`
             const endStr = `${next.toISOString().split('T')[0]}T23:59:59.999Z`
 
-            let query = supabase
+            if (multiBarberEnabled && barbeiroId) {
+                const result = await supabase.rpc('listar_agendamentos_publicos', {
+                    p_inicio: startStr,
+                    p_fim: endStr,
+                    p_barbeiro_id: barbeiroId,
+                })
+                if (!result.error) return result.data as Partial<Agendamento>[]
+                if (result.error.code !== 'PGRST202' && result.error.code !== '42883') throw result.error
+            }
+
+            // Compatibilidade com o banco antigo até a migração completa ser aplicada.
+            const { data, error } = await supabase
                 .from('agendamentos')
-                .select(multiBarberEnabled
-                    ? 'data_hora, servico, status, duracao_minutos, barbeiro_id'
-                    : 'data_hora, servico, status, duracao_minutos')
+                .select('data_hora, servico, status, duracao_minutos')
                 .gte('data_hora', startStr)
                 .lte('data_hora', endStr)
                 .neq('status', 'cancelado')
-
-            if (multiBarberEnabled && barbeiroId) query = query.eq('barbeiro_id', barbeiroId)
-
-            const { data, error } = await query
 
             if (error) throw error
             return data as Partial<Agendamento>[]

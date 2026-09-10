@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .env
 .env.*
+barbearia-backup-*.json
 
 # Editor directories and files
 .vscode/*
