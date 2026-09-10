@@ -38,6 +38,12 @@ for (const [table, tableColumns] of Object.entries(columns)) {
         if (table === 'agendamentos' || table === 'blocked_slots') {
             return { ...row, barbeiro_id: row.barbeiro_id || felipeId }
         }
+        if (table === 'blocked_clients') {
+            return {
+                ...row,
+                motivo: String(row.motivo || '').trim() || 'Motivo não informado (registro anterior)',
+            }
+        }
         return row
     })
     const csv = [

@@ -40,6 +40,12 @@ function prepareRows(table, rows) {
     if (table === 'agendamentos' || table === 'blocked_slots') {
         return rows.map(row => ({ ...row, barbeiro_id: row.barbeiro_id || felipeId }))
     }
+    if (table === 'blocked_clients') {
+        return rows.map(row => ({
+            ...row,
+            motivo: String(row.motivo || '').trim() || 'Motivo não informado (registro anterior)',
+        }))
+    }
     return rows
 }
 
