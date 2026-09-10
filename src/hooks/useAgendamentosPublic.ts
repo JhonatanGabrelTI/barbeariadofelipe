@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Agendamento } from '@/lib/supabase'
 
-export function useAgendamentosPublic(date?: string, barbeiroId?: string | null) {
+export function useAgendamentosPublic(date?: string, barbeiroId?: string | null, multiBarberEnabled = true) {
     const queryClient = useQueryClient()
 
     // Subscribe to Realtime changes on the agendamentos table
@@ -33,7 +33,7 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null)
     }, [date, barbeiroId, queryClient])
 
     return useQuery({
-        queryKey: ['agendamentos-public', date, barbeiroId],
+        queryKey: ['agendamentos-public', date, barbeiroId, multiBarberEnabled],
         queryFn: async () => {
             if (!date) return []
 
@@ -50,12 +50,14 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null)
 
             let query = supabase
                 .from('agendamentos')
-                .select('data_hora, servico, status, duracao_minutos, barbeiro_id')
+                .select(multiBarberEnabled
+                    ? 'data_hora, servico, status, duracao_minutos, barbeiro_id'
+                    : 'data_hora, servico, status, duracao_minutos')
                 .gte('data_hora', startStr)
                 .lte('data_hora', endStr)
                 .neq('status', 'cancelado')
 
-            if (barbeiroId) query = query.eq('barbeiro_id', barbeiroId)
+            if (multiBarberEnabled && barbeiroId) query = query.eq('barbeiro_id', barbeiroId)
 
             const { data, error } = await query
 

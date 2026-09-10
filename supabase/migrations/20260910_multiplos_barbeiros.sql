@@ -93,6 +93,21 @@ revoke all on function public.is_barbearia_owner() from public;
 grant execute on function public.current_barbeiro_id() to authenticated;
 grant execute on function public.is_barbearia_owner() to authenticated;
 
+create or replace function public.listar_barbeiros_publicos()
+returns table (id uuid, nome text, foto_url text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select b.id, b.nome, b.foto_url
+    from public.barbeiros b
+    where b.ativo = true
+    order by case when b.role = 'dono' then 0 else 1 end, b.nome;
+$$;
+
+grant execute on function public.listar_barbeiros_publicos() to anon, authenticated;
+
 alter table public.barbeiros enable row level security;
 
 drop policy if exists "barbeiros_staff_select" on public.barbeiros;

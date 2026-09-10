@@ -15,6 +15,10 @@ export type StaffMember = {
     ativo: boolean
 }
 
+function isMissingBarbeirosTable(code?: string) {
+    return code === 'PGRST205' || code === '42P01'
+}
+
 export function useAdmin() {
     const { user } = useAuth()
     const queryClient = useQueryClient()
@@ -31,7 +35,27 @@ export function useAdmin() {
                 .eq('ativo', true)
                 .maybeSingle()
 
-            if (byUser.error) throw byUser.error
+            if (byUser.error) {
+                if (!isMissingBarbeirosTable(byUser.error.code)) throw byUser.error
+                if (!user.email) return null
+
+                const legacyAdmin = await supabase
+                    .from('admin_emails')
+                    .select('email')
+                    .eq('email', user.email)
+                    .maybeSingle()
+
+                if (legacyAdmin.error) throw legacyAdmin.error
+                return legacyAdmin.data ? {
+                    id: '00000000-0000-4000-8000-000000000001',
+                    nome: 'Felipe',
+                    email: user.email,
+                    foto_url: '/barbeiros/felipe.png',
+                    user_id: user.id,
+                    role: 'dono' as const,
+                    ativo: true,
+                } : null
+            }
             if (byUser.data) return byUser.data as StaffMember
             if (!user.email) return null
 
@@ -60,7 +84,10 @@ export function useAdmin() {
                 .select('*')
                 .eq('ativo', true)
                 .order('role', { ascending: false })
-            if (error) throw error
+            if (error) {
+                if (isMissingBarbeirosTable(error.code) && currentStaff) return [currentStaff]
+                throw error
+            }
             return (data || []) as StaffMember[]
         },
         enabled: isAdmin,

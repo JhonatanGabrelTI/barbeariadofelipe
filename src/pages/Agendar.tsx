@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { isSupabaseConfigured } from '@/lib/supabase'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import { useAgendamentos } from '@/hooks/useAgendamentos'
 import { useAgendamentosPublic } from '@/hooks/useAgendamentosPublic'
 import { useBlockedSlots } from '@/hooks/useBlockedSlots'
@@ -56,6 +57,16 @@ export function Agendar() {
     const { user, loading: authLoading, signInWithEmail, signInWithGoogle } = useAuth()
     const { agendamentos, isLoading, createAgendamento } = useAgendamentos()
     const { servicos } = useServicos()
+    const { data: multiBarberEnabled = false } = useQuery({
+        queryKey: ['multi-barber-enabled'],
+        queryFn: async () => {
+            const { data, error } = await supabase.rpc('listar_barbeiros_publicos')
+            if (error) return false
+            return Array.isArray(data) && data.length >= 2
+        },
+        staleTime: 1000 * 60 * 5,
+        retry: false,
+    })
 
     // Use dynamic services from Supabase, fallback to defaults while loading
     const services = useMemo(() => {
@@ -71,13 +82,13 @@ export function Agendar() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
     const [selectedBarbeiro, setSelectedBarbeiro] = useState<string | null>(null)
-    const { isTimeBlocked } = useBlockedSlots(dateStr, selectedBarbeiro)
+    const { isTimeBlocked } = useBlockedSlots(dateStr, selectedBarbeiro, multiBarberEnabled)
     const {
         data: publicAgendamentos = [],
         isLoading: isLoadingPublic,
         isFetching: isFetchingPublic,
         refetch: refetchPublic,
-    } = useAgendamentosPublic(dateStr, selectedBarbeiro)
+    } = useAgendamentosPublic(dateStr, selectedBarbeiro, multiBarberEnabled)
     const [selectedTime, setSelectedTime] = useState<string | null>(null)
     const [selectedService, setSelectedService] = useState<string | null>(null)
     const [whatsapp, setWhatsapp] = useState('')
@@ -150,8 +161,13 @@ export function Agendar() {
 
     const handleServiceSelect = useCallback((serviceId: string) => {
         setSelectedService(serviceId)
-        setStep('professional')
-    }, [])
+        if (multiBarberEnabled) {
+            setStep('professional')
+        } else {
+            setSelectedBarbeiro(BARBEIROS[0].id)
+            setStep('datetime')
+        }
+    }, [multiBarberEnabled])
 
     const handleProfessionalSelect = useCallback((barbeiroId: string) => {
         setSelectedBarbeiro(barbeiroId)
@@ -315,8 +331,12 @@ export function Agendar() {
     }
 
     // Simplified steps for older clients
-    const stepsArray = ['service', 'professional', 'datetime', 'review'] as const
-    const stepsLabels = ['Serviço', 'Profissional', 'Data & Hora', 'Confirmação']
+    const stepsArray: ReadonlyArray<'service' | 'professional' | 'datetime' | 'review'> = multiBarberEnabled
+        ? ['service', 'professional', 'datetime', 'review']
+        : ['service', 'datetime', 'review']
+    const stepsLabels = multiBarberEnabled
+        ? ['Serviço', 'Profissional', 'Data & Hora', 'Confirmação']
+        : ['Serviço', 'Data & Hora', 'Confirmação']
     const currentStepIndex = stepsArray.indexOf(step)
 
     return (
@@ -509,7 +529,7 @@ export function Agendar() {
                 {/* ─────────────────────────────────────────────
                     STEP 2: Professional Selection
                 ───────────────────────────────────────────── */}
-                {step === 'professional' && (
+                {multiBarberEnabled && step === 'professional' && (
                     <div className="animate-fade-in">
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -566,7 +586,7 @@ export function Agendar() {
                                 <h2 className="text-xl font-bold text-gray-800">Escolha Data e Horário</h2>
                                 <p className="text-sm text-gray-400 mt-0.5">Selecione um dia e um horário disponível</p>
                             </div>
-                            <Button variant="ghost" onClick={() => setStep('professional')} className="text-gray-500 gap-1.5 text-sm">
+                            <Button variant="ghost" onClick={() => setStep(multiBarberEnabled ? 'professional' : 'service')} className="text-gray-500 gap-1.5 text-sm">
                                 ← Voltar
                             </Button>
                         </div>

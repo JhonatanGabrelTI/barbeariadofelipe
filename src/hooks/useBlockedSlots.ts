@@ -11,18 +11,18 @@ export type BlockedSlot = {
     created_at: string
 }
 
-export function useBlockedSlots(date?: string, barbeiroId?: string | null) {
+export function useBlockedSlots(date?: string, barbeiroId?: string | null, multiBarberEnabled = true) {
     const queryClient = useQueryClient()
 
     const { data: blockedSlots = [], isLoading } = useQuery({
-        queryKey: ['blocked-slots', date, barbeiroId],
+        queryKey: ['blocked-slots', date, barbeiroId, multiBarberEnabled],
         queryFn: async () => {
             let query = supabase.from('blocked_slots').select('*').order('data', { ascending: true })
 
             if (date) {
                 query = query.eq('data', date)
             }
-            if (barbeiroId) {
+            if (multiBarberEnabled && barbeiroId) {
                 query = query.eq('barbeiro_id', barbeiroId)
             }
 
@@ -44,10 +44,18 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null) {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
 
-            const { error } = await supabase.from('blocked_slots').insert({
+            const insertPayload = {
                 ...block,
                 created_by: user.id,
-            })
+            }
+            let { error } = await supabase.from('blocked_slots').insert(insertPayload)
+
+            if (error && (error.code === 'PGRST204' || error.code === '42703')) {
+                const legacyPayload = { ...insertPayload }
+                delete legacyPayload.barbeiro_id
+                const legacy = await supabase.from('blocked_slots').insert(legacyPayload)
+                error = legacy.error
+            }
             if (error) throw error
         },
         onSuccess: () => {
