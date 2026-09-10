@@ -14,11 +14,13 @@ import { ptBR } from 'date-fns/locale'
 interface FinanceiroProps {
     allAgendamentos: any[]
     servicePrices: Record<string, number>
+    title?: string
+    compact?: boolean
 }
 
 type Period = 'hoje' | 'semana' | 'mes'
 
-export function Financeiro({ allAgendamentos, servicePrices }: FinanceiroProps) {
+export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro', compact = false }: FinanceiroProps) {
     const [period, setPeriod] = useState<Period>('hoje')
 
     const finance = useMemo(() => {
@@ -113,7 +115,7 @@ export function Financeiro({ allAgendamentos, servicePrices }: FinanceiroProps) 
             revenueByService,
             recentCompleted,
         }
-    }, [allAgendamentos, period])
+    }, [allAgendamentos, period, servicePrices])
 
     const periodLabels: Record<Period, string> = {
         hoje: 'Hoje',
@@ -125,7 +127,7 @@ export function Financeiro({ allAgendamentos, servicePrices }: FinanceiroProps) 
         <div className="space-y-6">
             {/* Period Selector */}
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-800">💰 Financeiro</h2>
+                <h2 className="text-lg font-bold text-gray-800">💰 {title}</h2>
                 <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                     {(['hoje', 'semana', 'mes'] as Period[]).map(p => (
                         <button
@@ -145,7 +147,7 @@ export function Financeiro({ allAgendamentos, servicePrices }: FinanceiroProps) 
             </div>
 
             {/* Revenue Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className={`grid grid-cols-2 ${compact ? '' : 'lg:grid-cols-4'} gap-4`}>
                 <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl p-5 shadow-lg shadow-emerald-500/20">
                     <div className="flex items-center gap-2 mb-3">
                         <DollarSign className="w-5 h-5 text-emerald-100" />

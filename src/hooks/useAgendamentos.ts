@@ -30,6 +30,7 @@ export function useAgendamentos() {
             data_hora: string
             nome_cliente?: string
             duracao_minutos?: number
+            barbeiro_id: string
         }) => {
             const payload = {
                 p_user_id: user?.id || null,
@@ -38,9 +39,10 @@ export function useAgendamentos() {
                 p_servico: data.servico,
                 p_data_hora: data.data_hora,
                 p_duracao_minutos: data.duracao_minutos || 30,
+                p_barbeiro_id: data.barbeiro_id,
             }
 
-            const { data: result, error } = await supabase.rpc('agendar_horario_seguro', payload)
+            const { data: result, error } = await supabase.rpc('agendar_horario_com_barbeiro', payload)
 
             if (error) throw error
 

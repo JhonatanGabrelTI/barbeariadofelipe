@@ -9,6 +9,7 @@ import { WhatsAppConfig } from '@/components/WhatsAppConfig'
 import { GerenciarProdutos } from '@/components/GerenciarProdutos'
 import { ConfigurarServicos } from '@/components/ConfigurarServicos'
 import { Financeiro } from '@/components/Financeiro'
+import { BARBEIROS, getBarbeiro } from '@/data/barbeiros'
 import { useBlockedClients } from '@/hooks/useBlockedClients'
 import { Input } from '@/components/ui/input'
 import {
@@ -51,18 +52,67 @@ type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
 type Tab = 'agendamentos' | 'clientes' | 'bloqueados' | 'horarios' | 'servicos' | 'config' | 'produtos' | 'financeiro'
 
+function previewAppointments() {
+    const at = (dayOffset: number, hour: number, minute = 0) => {
+        const date = new Date()
+        date.setDate(date.getDate() + dayOffset)
+        date.setHours(hour, minute, 0, 0)
+        return date.toISOString()
+    }
+
+    return [
+        { id: 'preview-1', barbeiro_id: BARBEIROS[0].id, nome_cliente: 'Lucas', whatsapp: '43999990001', servico: 'Corte de Cabelo', data_hora: at(0, 14), status: 'confirmado' },
+        { id: 'preview-2', barbeiro_id: BARBEIROS[0].id, nome_cliente: 'Rafael', whatsapp: '43999990002', servico: 'Cabelo e Barba', data_hora: at(-1, 16), status: 'realizado' },
+        { id: 'preview-3', barbeiro_id: BARBEIROS[1].id, nome_cliente: 'Mateus', whatsapp: '43999990003', servico: 'Barba Completa', data_hora: at(0, 15, 30), status: 'confirmado' },
+        { id: 'preview-4', barbeiro_id: BARBEIROS[1].id, nome_cliente: 'João', whatsapp: '43999990004', servico: 'Cabelo e Sobrancelhas', data_hora: at(-2, 11), status: 'realizado' },
+    ]
+}
+
 export function Painel() {
     const { user, loading: authLoading, signInWithEmail, signInWithPassword, signOut } = useAuth()
-    const { isAdmin, isCheckingAdmin, allAgendamentos, isLoading, updateStatus } = useAdmin()
-    const { servicePrices } = useServicos()
+    const admin = useAdmin()
+    const previewKey = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('preview') : null
+    const isPreview = previewKey === 'felipe' || previewKey === 'eliabner'
+    const previewMembers = BARBEIROS.map((barbeiro, index) => ({
+        ...barbeiro,
+        email: index === 0 ? 'barbeariadofelipe2020@gmail.com' : 'eliabnerbarbeiro@gmail.com',
+        foto_url: barbeiro.foto,
+        user_id: null,
+        role: index === 0 ? 'dono' as const : 'barbeiro' as const,
+        ativo: true,
+    }))
+    const previewStaff = previewKey === 'felipe' ? previewMembers[0] : previewKey === 'eliabner' ? previewMembers[1] : null
+    const currentStaff = previewStaff || admin.currentStaff
+    const isAdmin = isPreview || admin.isAdmin
+    const isOwner = isPreview ? previewStaff?.role === 'dono' : admin.isOwner
+    const isCheckingAdmin = isPreview ? false : admin.isCheckingAdmin
+    const staffMembers = isPreview ? (isOwner ? previewMembers : [previewStaff!]) : admin.staffMembers
+    const previewAll = previewAppointments()
+    const allAgendamentos = isPreview
+        ? (isOwner ? previewAll : previewAll.filter(a => a.barbeiro_id === previewStaff?.id))
+        : admin.allAgendamentos
+    const isLoading = isPreview ? false : admin.isLoading
+    const updateStatus = admin.updateStatus
+    const { servicePrices: savedServicePrices } = useServicos()
+    const servicePrices = isPreview ? {
+        'Corte de Cabelo': 35,
+        'Barba Completa': 35,
+        'Cabelo e Barba': 65,
+        'Sobrancelhas': 15,
+        'Cabelo e Sobrancelhas': 45,
+        'Cabelo, Barba e Sobrancelhas': 75,
+    } : savedServicePrices
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
+    const [showPassword, setShowPassword] = useState(true)
     const [isPasswordVisible, setIsPasswordVisible] = useState(false)
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('todos')
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('hoje')
     const [activeTab, setActiveTab] = useState<Tab>('agendamentos')
     const [showHistoryModal, setShowHistoryModal] = useState(false)
+    const [selectedStaffId, setSelectedStaffId] = useState('')
+    const managedStaffId = isOwner ? (selectedStaffId || currentStaff?.id || '') : (currentStaff?.id || '')
+    const managedStaff = staffMembers.find(member => member.id === managedStaffId) || currentStaff
 
     // Blocked clients hook and states
     const { blockedClients, isLoading: isLoadingBlocked, blockClient, unblockClient } = useBlockedClients()
@@ -228,6 +278,10 @@ export function Painel() {
     }, [availableMonths, allAgendamentos, servicePrices])
 
     const handleUpdateStatus = async (id: string, status: string) => {
+        if (isPreview) {
+            toast.info('Prévia local: nenhuma informação real foi alterada.')
+            return
+        }
         try {
             await updateStatus.mutateAsync({ id, status })
             const label = status === 'realizado' ? 'concluído' : status === 'cancelado' ? 'cancelado' : 'confirmado'
@@ -278,7 +332,7 @@ export function Painel() {
     }
 
     // Loading
-    if (authLoading || isCheckingAdmin) {
+    if ((!isPreview && authLoading) || isCheckingAdmin) {
         return (
             <div className="min-h-screen pt-24 px-4">
                 <div className="max-w-6xl mx-auto space-y-6">
@@ -295,7 +349,7 @@ export function Painel() {
     }
 
     // Not logged in
-    if (!user) {
+    if (!user && !isPreview) {
         return (
             <div className="min-h-screen pt-24 flex items-center justify-center px-4 bg-gray-50/50">
                 <div className="max-w-md w-full bg-white rounded-3xl border border-gray-100 p-8 shadow-xl shadow-gray-200/50 text-center space-y-6">
@@ -309,11 +363,8 @@ export function Painel() {
 
                     <div className="space-y-4 pt-4">
                         <div className="text-sm font-medium text-amber-800 bg-amber-50 border border-amber-100 p-4 rounded-xl mb-2 text-left">
-                            <strong>⚠️ Login pelo Google indisponível:</strong><br />
-                            O acesso por Google exige uma configuração que ainda não está pronta.
-                            <br /><br />
-                            <strong>✅ Use seu e-mail abaixo:</strong><br />
-                            Você receberá um link de acesso direto na sua caixa de entrada.
+                            <strong>🔐 Acesso dos barbeiros</strong><br />
+                            Entre com o e-mail e a senha cadastrados para o seu painel.
                         </div>
 
                         <form onSubmit={async (e) => {
@@ -348,14 +399,7 @@ export function Painel() {
                                 type="email"
                                 placeholder="seu@email.com"
                                 value={email}
-                                onChange={(e) => {
-                                    setEmail(e.target.value);
-                                    if (e.target.value === 'barbeariadofelipe2020@gmail.com') {
-                                        setShowPassword(true);
-                                    } else {
-                                        setShowPassword(false);
-                                    }
-                                }}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="w-full h-12 rounded-xl border border-gray-100 bg-gray-50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                             />
@@ -365,7 +409,7 @@ export function Painel() {
                                     <input
                                         name="password"
                                         type={isPasswordVisible ? "text" : "password"}
-                                        placeholder="Sua senha de admin"
+                                        placeholder="Sua senha"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -422,7 +466,7 @@ export function Painel() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-black text-gray-800">Acesso Negado</h1>
-                        <p className="text-gray-500 mt-2">O e-mail <strong>{user.email}</strong> não possui permissões de barbeiro.</p>
+                        <p className="text-gray-500 mt-2">O e-mail <strong>{user?.email}</strong> não possui permissões de barbeiro.</p>
                     </div>
                     <Button
                         variant="ghost"
@@ -442,16 +486,20 @@ export function Painel() {
                 {/* Header */}
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Painel do Barbeiro</h1>
-                        <p className="text-gray-500">Gerencie seus agendamentos e controle seus horários.</p>
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Painel de {currentStaff?.nome || 'Barbeiro'}</h1>
+                        <p className="text-gray-500">
+                            {isOwner ? 'Visão completa da barbearia e dos dois profissionais.' : 'Seus agendamentos, horários e financeiro.'}
+                        </p>
                     </div>
-                    <Button 
-                        onClick={() => setActiveTab('servicos')}
-                        className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200 gap-2 h-12 px-6 transition-all hover:scale-105 active:scale-95"
-                    >
-                        <Scissors className="w-5 h-5" />
-                        Ajustar Preços e Tempos
-                    </Button>
+                    {isOwner && (
+                        <Button
+                            onClick={() => setActiveTab('servicos')}
+                            className="bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-200 gap-2 h-12 px-6 transition-all hover:scale-105 active:scale-95"
+                        >
+                            <Scissors className="w-5 h-5" />
+                            Ajustar Preços e Tempos
+                        </Button>
+                    )}
                 </div>
 
                 {/* Stats Cards */}
@@ -534,7 +582,7 @@ export function Painel() {
                         <LayoutList className="w-4 h-4" />
                         Agendamentos
                     </button>
-                    <button
+                    {isOwner && <button
                         onClick={() => setActiveTab('clientes')}
                         className={[
                             'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
@@ -545,8 +593,8 @@ export function Painel() {
                     >
                         <Users className="w-4 h-4" />
                         Clientes
-                    </button>
-                    <button
+                    </button>}
+                    {isOwner && <button
                         onClick={() => setActiveTab('bloqueados')}
                         className={[
                             'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
@@ -557,7 +605,7 @@ export function Painel() {
                     >
                         <UserX className="w-4 h-4" />
                         Bloqueados
-                    </button>
+                    </button>}
                     <button
                         onClick={() => setActiveTab('horarios')}
                         className={[
@@ -570,7 +618,7 @@ export function Painel() {
                         <TimerOff className="w-4 h-4" />
                         Controle de Horários
                     </button>
-                    <button
+                    {isOwner && <button
                         onClick={() => setActiveTab('config')}
                         className={[
                             'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
@@ -581,8 +629,8 @@ export function Painel() {
                     >
                         <MessageCircle className="w-4 h-4" />
                         Configurações
-                    </button>
-                    <button
+                    </button>}
+                    {isOwner && <button
                         onClick={() => setActiveTab('servicos')}
                         className={[
                             'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300',
@@ -593,8 +641,8 @@ export function Painel() {
                     >
                         <Settings2 className="w-4 h-4" />
                         Serviços
-                    </button>
-                    <button
+                    </button>}
+                    {isOwner && <button
                         onClick={() => setActiveTab('produtos')}
                         className={[
                             'flex-1 min-w-max whitespace-nowrap flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300',
@@ -605,7 +653,7 @@ export function Painel() {
                     >
                         <Package className="w-4 h-4" />
                         Produtos
-                    </button>
+                    </button>}
                     <button
                         onClick={() => setActiveTab('financeiro')}
                         className={[
@@ -622,7 +670,30 @@ export function Painel() {
 
                 {/* Tab Content */}
                 {activeTab === 'horarios' ? (
-                    <ControleHorarios />
+                    <div className="space-y-4">
+                        {isOwner && (
+                            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-wrap items-center gap-3">
+                                <span className="text-sm font-bold text-gray-700">Agenda de:</span>
+                                {staffMembers.map(member => (
+                                    <button
+                                        key={member.id}
+                                        onClick={() => setSelectedStaffId(member.id)}
+                                        className={[
+                                            'px-4 py-2 rounded-xl text-sm font-bold transition-all',
+                                            managedStaffId === member.id
+                                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                                        ].join(' ')}
+                                    >
+                                        {member.nome}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {managedStaffId && (
+                            <ControleHorarios barbeiroId={managedStaffId} barbeiroNome={managedStaff?.nome} />
+                        )}
+                    </div>
                 ) : activeTab === 'servicos' ? (
                     <ConfigurarServicos />
                 ) : activeTab === 'config' ? (
@@ -630,7 +701,26 @@ export function Painel() {
                 ) : activeTab === 'produtos' ? (
                     <GerenciarProdutos />
                 ) : activeTab === 'financeiro' ? (
-                    <Financeiro allAgendamentos={allAgendamentos} servicePrices={servicePrices} />
+                    isOwner ? (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                            {staffMembers.map(member => (
+                                <div key={member.id} className="bg-gray-50/60 rounded-3xl border border-gray-100 p-4">
+                                    <Financeiro
+                                        title={`Financeiro de ${member.nome}`}
+                                        compact
+                                        allAgendamentos={allAgendamentos.filter(a => a.barbeiro_id === member.id)}
+                                        servicePrices={servicePrices}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <Financeiro
+                            title={`Financeiro de ${currentStaff?.nome || 'Barbeiro'}`}
+                            allAgendamentos={allAgendamentos}
+                            servicePrices={servicePrices}
+                        />
+                    )
                 ) : activeTab === 'clientes' ? (
                     <div className="space-y-6">
                         {/* Search and Title */}
@@ -974,6 +1064,11 @@ export function Painel() {
                                                         <div className="flex items-center gap-2">
                                                             <Scissors className="w-4 h-4 text-gray-400" />
                                                             <h3 className="font-semibold text-gray-800">{agendamento.servico}</h3>
+                                                            {isOwner && (
+                                                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold">
+                                                                    {staffMembers.find(member => member.id === agendamento.barbeiro_id)?.nome || getBarbeiro(agendamento.barbeiro_id)?.nome || 'Barbeiro'}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-3 mt-1">
                                                             <div className="flex items-center gap-1 text-sm text-gray-400">

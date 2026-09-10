@@ -15,6 +15,8 @@ export type Agendamento = {
     nome_cliente: string | null
     whatsapp: string
     servico: string
+    barbeiro_id: string
+    duracao_minutos?: number
     data_hora: string
     status: 'confirmado' | 'cancelado' | 'realizado'
     created_at: string

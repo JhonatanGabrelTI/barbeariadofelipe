@@ -33,7 +33,13 @@ Deno.serve(async (req) => {
             timeZone: "America/Sao_Paulo",
         });
 
-        const message = `Olá ${record.nome_cliente || "Cliente"}! 👋 Seu agendamento de *${record.servico}* na *Felipe Barbearia* foi confirmado!\n\n📅 *Data:* ${date}\n⏰ *Horário:* ${time}\n\nAguardamos você! ✂️`;
+        const { data: barbeiro } = await supabase
+            .from("barbeiros")
+            .select("nome")
+            .eq("id", record.barbeiro_id)
+            .maybeSingle();
+
+        const message = `Olá ${record.nome_cliente || "Cliente"}! 👋 Seu agendamento de *${record.servico}* na *Felipe Barbearia* foi confirmado!\n\n💈 *Profissional:* ${barbeiro?.nome || "Barbeiro"}\n📅 *Data:* ${date}\n⏰ *Horário:* ${time}\n\nAguardamos você! ✂️`;
 
         // 4. Send to Z-API
         const url = `${config.z_api_url}${config.instance_id}/token/${config.instance_token}/send-text`;

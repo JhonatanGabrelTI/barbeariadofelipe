@@ -7,25 +7,30 @@ export type BlockedSlot = {
     hora_inicio: string
     hora_fim: string
     motivo: string
+    barbeiro_id: string
     created_at: string
 }
 
-export function useBlockedSlots(date?: string) {
+export function useBlockedSlots(date?: string, barbeiroId?: string | null) {
     const queryClient = useQueryClient()
 
     const { data: blockedSlots = [], isLoading } = useQuery({
-        queryKey: ['blocked-slots', date],
+        queryKey: ['blocked-slots', date, barbeiroId],
         queryFn: async () => {
             let query = supabase.from('blocked_slots').select('*').order('data', { ascending: true })
 
             if (date) {
                 query = query.eq('data', date)
             }
+            if (barbeiroId) {
+                query = query.eq('barbeiro_id', barbeiroId)
+            }
 
             const { data, error } = await query
             if (error) throw error
             return (data || []) as BlockedSlot[]
         },
+        enabled: !!barbeiroId,
     })
 
     const createBlock = useMutation({
@@ -34,6 +39,7 @@ export function useBlockedSlots(date?: string) {
             hora_inicio: string
             hora_fim: string
             motivo?: string
+            barbeiro_id?: string
         }) => {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')

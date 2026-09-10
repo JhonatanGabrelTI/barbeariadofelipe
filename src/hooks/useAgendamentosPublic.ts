@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Agendamento } from '@/lib/supabase'
 
-export function useAgendamentosPublic(date?: string) {
+export function useAgendamentosPublic(date?: string, barbeiroId?: string | null) {
     const queryClient = useQueryClient()
 
     // Subscribe to Realtime changes on the agendamentos table
@@ -11,7 +11,7 @@ export function useAgendamentosPublic(date?: string) {
         if (!date) return
 
         const channel = supabase
-            .channel(`agendamentos-realtime-${date}`)
+            .channel(`agendamentos-realtime-${date}-${barbeiroId || 'todos'}`)
             .on(
                 'postgres_changes',
                 {
@@ -21,7 +21,7 @@ export function useAgendamentosPublic(date?: string) {
                 },
                 () => {
                     // Instantly refetch when ANY change happens
-                    queryClient.invalidateQueries({ queryKey: ['agendamentos-public', date] })
+                    queryClient.invalidateQueries({ queryKey: ['agendamentos-public', date, barbeiroId] })
                     queryClient.invalidateQueries({ queryKey: ['agendamentos'] })
                 }
             )
@@ -30,10 +30,10 @@ export function useAgendamentosPublic(date?: string) {
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [date, queryClient])
+    }, [date, barbeiroId, queryClient])
 
     return useQuery({
-        queryKey: ['agendamentos-public', date],
+        queryKey: ['agendamentos-public', date, barbeiroId],
         queryFn: async () => {
             if (!date) return []
 
@@ -48,17 +48,21 @@ export function useAgendamentosPublic(date?: string) {
             const startStr = `${prev.toISOString().split('T')[0]}T00:00:00.000Z`
             const endStr = `${next.toISOString().split('T')[0]}T23:59:59.999Z`
 
-            const { data, error } = await supabase
+            let query = supabase
                 .from('agendamentos')
-                .select('data_hora, servico, status, duracao_minutos')
+                .select('data_hora, servico, status, duracao_minutos, barbeiro_id')
                 .gte('data_hora', startStr)
                 .lte('data_hora', endStr)
                 .neq('status', 'cancelado')
 
+            if (barbeiroId) query = query.eq('barbeiro_id', barbeiroId)
+
+            const { data, error } = await query
+
             if (error) throw error
             return data as Partial<Agendamento>[]
         },
-        enabled: !!date,
+        enabled: !!date && !!barbeiroId,
         staleTime: 0,                   // Always consider data stale — never serve from cache
         refetchInterval: 1000 * 5,      // Poll every 5 seconds as fallback (was 10s)
         refetchOnWindowFocus: true,     // Refetch when user returns to tab

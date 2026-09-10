@@ -24,7 +24,7 @@ const allTimeSlots = [
     '18:00', '18:30', '19:00', '19:30',
 ]
 
-export function ControleHorarios() {
+export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: string; barbeiroNome?: string }) {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const [showBlockDialog, setShowBlockDialog] = useState(false)
     const [horaInicio, setHoraInicio] = useState('')
@@ -33,10 +33,10 @@ export function ControleHorarios() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
-    const { blockedSlots, isLoading, createBlock, deleteBlock } = useBlockedSlots(dateStr)
+    const { blockedSlots, isLoading, createBlock, deleteBlock } = useBlockedSlots(dateStr, barbeiroId)
 
     // Get all blocked slots (no date filter) for calendar indicators
-    const { blockedSlots: allBlocked } = useBlockedSlots()
+    const { blockedSlots: allBlocked } = useBlockedSlots(undefined, barbeiroId)
 
     const today = startOfDay(new Date())
     const maxDate = addDays(today, 60)
@@ -62,6 +62,7 @@ export function ControleHorarios() {
                 hora_inicio: time,
                 hora_fim: `${endH}:${endM}`,
                 motivo: 'Pausa',
+                barbeiro_id: barbeiroId,
             })
             toast.success(`✅ Horário ${time} bloqueado!`)
         } catch {
@@ -69,7 +70,7 @@ export function ControleHorarios() {
         } finally {
             setIsSubmitting(false)
         }
-    }, [dateStr, createBlock])
+    }, [dateStr, barbeiroId, createBlock])
 
     const handleBlockRange = useCallback(async () => {
         if (!dateStr || !horaInicio || !horaFim) return
@@ -84,6 +85,7 @@ export function ControleHorarios() {
                 hora_inicio: horaInicio,
                 hora_fim: horaFim,
                 motivo: motivo || 'Pausa',
+                barbeiro_id: barbeiroId,
             })
             toast.success(`✅ Horários de ${horaInicio} às ${horaFim} bloqueados!`)
             setShowBlockDialog(false)
@@ -95,7 +97,7 @@ export function ControleHorarios() {
         } finally {
             setIsSubmitting(false)
         }
-    }, [dateStr, horaInicio, horaFim, motivo, createBlock])
+    }, [dateStr, horaInicio, horaFim, motivo, barbeiroId, createBlock])
 
     const handleUnblock = useCallback(async (id: string) => {
         try {
@@ -119,7 +121,7 @@ export function ControleHorarios() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-800">Controle de Horários</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Controle de Horários{barbeiroNome ? ` — ${barbeiroNome}` : ''}</h2>
                     <p className="text-sm text-gray-500">Bloqueie horários para pausas, almoço ou folgas.</p>
                 </div>
                 {selectedDate && (

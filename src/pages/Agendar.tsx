@@ -21,6 +21,7 @@ import { format, addDays, addMinutes, isBefore, isToday, startOfDay, setHours, s
 import { ptBR } from 'date-fns/locale'
 import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info, Phone, RefreshCw, Sparkles, ChevronRight, Shield } from 'lucide-react'
 import { IS_SAO_JOAO, IS_COPA } from '../config'
+import { BARBEIROS, getBarbeiro } from '@/data/barbeiros'
 
 const defaultServices = [
     { id: 'corte-cabelo', name: 'Corte de Cabelo', price: 'R$ 35', duration: 30 },
@@ -69,13 +70,14 @@ export function Agendar() {
 
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
-    const { isTimeBlocked } = useBlockedSlots(dateStr)
+    const [selectedBarbeiro, setSelectedBarbeiro] = useState<string | null>(null)
+    const { isTimeBlocked } = useBlockedSlots(dateStr, selectedBarbeiro)
     const {
         data: publicAgendamentos = [],
         isLoading: isLoadingPublic,
         isFetching: isFetchingPublic,
         refetch: refetchPublic,
-    } = useAgendamentosPublic(dateStr)
+    } = useAgendamentosPublic(dateStr, selectedBarbeiro)
     const [selectedTime, setSelectedTime] = useState<string | null>(null)
     const [selectedService, setSelectedService] = useState<string | null>(null)
     const [whatsapp, setWhatsapp] = useState('')
@@ -89,10 +91,11 @@ export function Agendar() {
     const [showSuccessDialog, setShowSuccessDialog] = useState(false)
     const [lastBookingDetails, setLastBookingDetails] = useState<{
         service?: string,
+        professional?: string,
         date?: string,
         time?: string
     } | null>(null)
-    const [step, setStep] = useState<'service' | 'datetime' | 'review'>('service')
+    const [step, setStep] = useState<'service' | 'professional' | 'datetime' | 'review'>('service')
 
     // Pre-fill name from metadata if logged in
     useEffect(() => {
@@ -147,11 +150,18 @@ export function Agendar() {
 
     const handleServiceSelect = useCallback((serviceId: string) => {
         setSelectedService(serviceId)
+        setStep('professional')
+    }, [])
+
+    const handleProfessionalSelect = useCallback((barbeiroId: string) => {
+        setSelectedBarbeiro(barbeiroId)
+        setSelectedDate(undefined)
+        setSelectedTime(null)
         setStep('datetime')
     }, [])
 
     const handleConfirmBooking = useCallback(async () => {
-        if (!selectedDate || !selectedTime || !selectedService || !whatsapp) return
+        if (!selectedDate || !selectedTime || !selectedService || !selectedBarbeiro || !whatsapp) return
         if (!nomeCliente) {
             toast.error('❌ Por favor, informe seu nome.')
             return
@@ -176,6 +186,7 @@ export function Agendar() {
                 servico: service?.name || '',
                 data_hora: dateTime.toISOString(),
                 duracao_minutos: service?.duration || 30,
+                barbeiro_id: selectedBarbeiro,
             })
             toast.success('✅ Agendamento realizado!', {
                 description: 'Confirme seu horário no WhatsApp abaixo.',
@@ -183,6 +194,7 @@ export function Agendar() {
 
             setLastBookingDetails({
                 service: service?.name,
+                professional: getBarbeiro(selectedBarbeiro)?.nome,
                 date: format(dateTime, "dd/MM/yyyy"),
                 time: selectedTime
             })
@@ -199,7 +211,7 @@ export function Agendar() {
         } finally {
             setIsBooking(false)
         }
-    }, [selectedDate, selectedTime, selectedService, whatsapp, nomeCliente, createAgendamento, refetchPublic])
+    }, [selectedDate, selectedTime, selectedService, selectedBarbeiro, whatsapp, nomeCliente, services, createAgendamento, refetchPublic])
 
     const selectedServiceData = services.find(s => s.id === selectedService)
 
@@ -303,8 +315,8 @@ export function Agendar() {
     }
 
     // Simplified steps for older clients
-    const stepsArray = ['service', 'datetime', 'review'] as const
-    const stepsLabels = ['Serviço', 'Data & Hora', 'Confirmação']
+    const stepsArray = ['service', 'professional', 'datetime', 'review'] as const
+    const stepsLabels = ['Serviço', 'Profissional', 'Data & Hora', 'Confirmação']
     const currentStepIndex = stepsArray.indexOf(step)
 
     return (
@@ -435,8 +447,8 @@ export function Agendar() {
                                     {stepsLabels[i]}
                                 </span>
                             </div>
-                            {i < 2 && (
-                                <div className="w-16 sm:w-28 mx-1 h-1 rounded-full overflow-hidden bg-gray-100 mb-4">
+                            {i < stepsArray.length - 1 && (
+                                <div className="w-10 sm:w-20 mx-1 h-1 rounded-full overflow-hidden bg-gray-100 mb-4">
                                     <div
                                         className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-700 ease-out"
                                         style={{ width: i < currentStepIndex ? '100%' : '0%' }}
@@ -495,7 +507,57 @@ export function Agendar() {
                 )}
 
                 {/* ─────────────────────────────────────────────
-                    STEP 2: Date & Time Selection
+                    STEP 2: Professional Selection
+                ───────────────────────────────────────────── */}
+                {step === 'professional' && (
+                    <div className="animate-fade-in">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Escolha o Profissional</h2>
+                                <p className="text-sm text-gray-400 mt-0.5">Quem vai cuidar do seu atendimento?</p>
+                            </div>
+                            <Button variant="ghost" onClick={() => setStep('service')} className="text-gray-500 gap-1.5 text-sm">
+                                ← Voltar
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+                            {BARBEIROS.map((barbeiro, idx) => (
+                                <button
+                                    key={barbeiro.id}
+                                    onClick={() => handleProfessionalSelect(barbeiro.id)}
+                                    className={[
+                                        'rounded-3xl border-2 bg-white overflow-hidden text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl group animate-fade-in-up',
+                                        selectedBarbeiro === barbeiro.id
+                                            ? 'border-emerald-500 shadow-lg shadow-emerald-500/15 ring-4 ring-emerald-500/10'
+                                            : 'border-gray-100 hover:border-emerald-200 hover:shadow-emerald-500/10'
+                                    ].join(' ')}
+                                    style={{ animationDelay: `${idx * 80}ms` }}
+                                >
+                                    <div className="aspect-[4/5] overflow-hidden bg-gray-100">
+                                        <img
+                                            src={barbeiro.foto}
+                                            alt={`Foto de ${barbeiro.nome}`}
+                                            className="w-full h-full object-cover object-top grayscale group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    </div>
+                                    <div className="p-5 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs font-bold uppercase tracking-wider text-emerald-500 mb-1">Barbeiro</p>
+                                            <h3 className="text-xl font-black text-gray-900">{barbeiro.nome}</h3>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* ─────────────────────────────────────────────
+                    STEP 3: Date & Time Selection
                 ───────────────────────────────────────────── */}
                 {step === 'datetime' && (
                     <div className="animate-fade-in">
@@ -504,7 +566,7 @@ export function Agendar() {
                                 <h2 className="text-xl font-bold text-gray-800">Escolha Data e Horário</h2>
                                 <p className="text-sm text-gray-400 mt-0.5">Selecione um dia e um horário disponível</p>
                             </div>
-                            <Button variant="ghost" onClick={() => setStep('service')} className="text-gray-500 gap-1.5 text-sm">
+                            <Button variant="ghost" onClick={() => setStep('professional')} className="text-gray-500 gap-1.5 text-sm">
                                 ← Voltar
                             </Button>
                         </div>
@@ -665,7 +727,7 @@ export function Agendar() {
                 )}
 
                 {/* ─────────────────────────────────────────────
-                    STEP 3: Review
+                    STEP 4: Review
                 ───────────────────────────────────────────── */}
                 {step === 'review' && selectedDate && selectedTime && selectedServiceData && (
                     <div className="animate-fade-in max-w-lg mx-auto">
@@ -695,6 +757,10 @@ export function Agendar() {
                             </div>
 
                             <div className="relative space-y-3">
+                                <div className="flex items-center justify-between bg-gray-50/70 rounded-xl px-4 py-2.5">
+                                    <span className="text-sm text-gray-500 font-medium">💈 Profissional</span>
+                                    <span className="font-semibold text-gray-800 text-sm">{getBarbeiro(selectedBarbeiro)?.nome}</span>
+                                </div>
                                 <div className="flex items-center justify-between bg-gray-50/70 rounded-xl px-4 py-2.5">
                                     <span className="text-sm text-gray-500 font-medium">📅 Data</span>
                                     <span className="font-semibold text-gray-800 text-sm">
@@ -774,6 +840,7 @@ export function Agendar() {
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-gray-800">{agendamento.servico}</h3>
+                                            <p className="text-xs font-medium text-emerald-600">Com {getBarbeiro(agendamento.barbeiro_id)?.nome || 'barbeiro'}</p>
                                             <p className="text-sm text-gray-400">
                                                 {format(new Date(agendamento.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                                             </p>
@@ -868,6 +935,10 @@ export function Agendar() {
                             <span className="font-bold text-gray-800">{selectedServiceData?.name}</span>
                         </div>
                         <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+                            <span className="text-gray-500 text-sm">Profissional</span>
+                            <span className="font-bold text-gray-800">{getBarbeiro(selectedBarbeiro)?.nome}</span>
+                        </div>
+                        <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
                             <span className="text-gray-500 text-sm">Dia</span>
                             <span className="font-bold text-gray-800">
                                 {selectedDate && format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
@@ -914,6 +985,7 @@ export function Agendar() {
                     setSelectedDate(undefined)
                     setSelectedTime(null)
                     setSelectedService(null)
+                    setSelectedBarbeiro(null)
                     setNomeCliente('')
                     setStep('service')
                     setLastBookingDetails(null)
@@ -937,13 +1009,14 @@ export function Agendar() {
                         <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl p-5 my-6 text-left space-y-2 shadow-sm">
                             <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Resumo do Agendamento</p>
                             <p className="text-gray-800 font-semibold">✂️ {lastBookingDetails?.service}</p>
+                            <p className="text-gray-800 font-semibold">💈 Profissional: {lastBookingDetails?.professional}</p>
                             <p className="text-gray-800 font-semibold">📅 {lastBookingDetails?.date} às {lastBookingDetails?.time}</p>
                         </div>
 
                         <div className="space-y-3">
                             <Button
                                 onClick={() => {
-                                    const message = `Olá! Acabei de agendar um(a) *${lastBookingDetails?.service}* para o dia *${lastBookingDetails?.date}* às *${lastBookingDetails?.time}*. Gostaria de confirmar!`
+                                    const message = `Olá! Acabei de agendar um(a) *${lastBookingDetails?.service}* com *${lastBookingDetails?.professional}* para o dia *${lastBookingDetails?.date}* às *${lastBookingDetails?.time}*. Gostaria de confirmar!`
                                     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank')
                                 }}
                                 className="w-full h-14 bg-gradient-to-r from-[#25D366] to-[#20ba59] hover:from-[#20ba59] hover:to-[#1da851] text-white rounded-2xl text-base font-bold shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all duration-300"
