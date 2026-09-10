@@ -14,6 +14,7 @@ dist-ssr
 .env
 .env.*
 barbearia-backup-*.json
+barbearia-import-*/
 
 # Editor directories and files
 .vscode/*
