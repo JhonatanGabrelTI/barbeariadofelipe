@@ -357,8 +357,13 @@ export function Painel() {
     }
 
     const handleBlockClient = async (whatsapp: string, nome: string, motivo: string) => {
+        const motivoNormalizado = motivo.trim()
+        if (!motivoNormalizado) {
+            toast.error('❌ Informe obrigatoriamente o motivo do bloqueio.')
+            return
+        }
         try {
-            await blockClient.mutateAsync({ whatsapp, nome, motivo })
+            await blockClient.mutateAsync({ whatsapp, nome, motivo: motivoNormalizado })
             toast.success('🔒 Cliente bloqueado com sucesso!')
             setBlockingClient(null)
             setBlockReason('')
@@ -1226,14 +1231,18 @@ export function Painel() {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Motivo do Bloqueio (Opcional)
+                                    Motivo do Bloqueio *
                                 </label>
                                 <Input
                                     placeholder="Ex: Faltou sem avisar, grosseria..."
                                     value={blockReason}
                                     onChange={(e) => setBlockReason(e.target.value)}
+                                    required
+                                    maxLength={200}
+                                    aria-required="true"
                                     className="h-11 rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500"
                                 />
+                                <p className="text-xs text-gray-400">Obrigatório · {blockReason.trim().length}/200 caracteres</p>
                             </div>
                         </div>
                     )}
@@ -1255,7 +1264,7 @@ export function Painel() {
                                     handleBlockClient(blockingClient.whatsapp, blockingClient.nome, blockReason)
                                 }
                             }}
-                            disabled={blockClient.isPending}
+                            disabled={blockClient.isPending || !blockReason.trim()}
                             className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl h-11 px-5 shadow-lg shadow-red-200"
                         >
                             {blockClient.isPending ? 'Bloqueando...' : 'Confirmar Bloqueio'}
@@ -1339,14 +1348,18 @@ export function Painel() {
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Motivo do Bloqueio (Opcional)
+                                Motivo do Bloqueio *
                             </label>
                             <Input
                                 placeholder="Ex: Cliente problemático, caloteiro..."
                                 value={blockReason}
                                 onChange={(e) => setBlockReason(e.target.value)}
+                                required
+                                maxLength={200}
+                                aria-required="true"
                                 className="h-11 rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500"
                             />
+                            <p className="text-xs text-gray-400">Obrigatório · {blockReason.trim().length}/200 caracteres</p>
                         </div>
                     </div>
 
@@ -1369,11 +1382,15 @@ export function Painel() {
                                     toast.error('❌ Por favor, digite o número do WhatsApp.')
                                     return
                                 }
+                                if (!blockReason.trim()) {
+                                    toast.error('❌ Informe obrigatoriamente o motivo do bloqueio.')
+                                    return
+                                }
                                 try {
                                     await blockClient.mutateAsync({
                                         whatsapp: manualWhatsapp,
                                         nome: manualNome,
-                                        motivo: blockReason
+                                        motivo: blockReason.trim()
                                     })
                                     toast.success('🔒 Número bloqueado com sucesso!')
                                     setShowManualBlockModal(false)
@@ -1384,7 +1401,7 @@ export function Painel() {
                                     toast.error(error.message || '❌ Erro ao bloquear número.')
                                 }
                             }}
-                            disabled={blockClient.isPending}
+                            disabled={blockClient.isPending || !manualWhatsapp.trim() || !blockReason.trim()}
                             className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl h-11 px-5 shadow-lg shadow-red-200"
                         >
                             {blockClient.isPending ? 'Bloqueando...' : 'Confirmar Bloqueio'}

@@ -5,7 +5,7 @@ export type BlockedClient = {
     id: string
     whatsapp: string
     nome: string | null
-    motivo: string | null
+    motivo: string
     created_at: string
 }
 
@@ -24,23 +24,32 @@ export function useBlockedClients() {
             return (data || []) as BlockedClient[]
         },
         staleTime: 1000 * 30, // 30 seconds
+        refetchInterval: 1000 * 30,
     })
 
     const blockClient = useMutation({
         mutationFn: async (client: {
             whatsapp: string
             nome?: string
-            motivo?: string
+            motivo: string
         }) => {
             // Clean up WhatsApp number (remove non-digits, e.g. +55 (43) 99864-8935 -> 43998648935 or similar)
             const cleanWhatsapp = client.whatsapp.replace(/\D/g, '')
+            const motivo = client.motivo.trim()
+
+            if (cleanWhatsapp.length < 10 || cleanWhatsapp.length > 13) {
+                throw new Error('Digite um número de WhatsApp válido, com DDD.')
+            }
+            if (!motivo) {
+                throw new Error('Informe obrigatoriamente o motivo do bloqueio.')
+            }
             
             const { data, error } = await supabase
                 .from('blocked_clients')
                 .insert({
                     whatsapp: cleanWhatsapp,
                     nome: client.nome || null,
-                    motivo: client.motivo || null,
+                    motivo,
                 })
                 .select()
                 .single()

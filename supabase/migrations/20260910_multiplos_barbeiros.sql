@@ -40,7 +40,7 @@ create table if not exists public.blocked_slots (
 
 create table if not exists public.blocked_clients (
     id uuid primary key default gen_random_uuid(), whatsapp text not null unique,
-    nome text, motivo text, created_at timestamptz not null default now()
+    nome text, motivo text not null, created_at timestamptz not null default now()
 );
 
 create table if not exists public.whatsapp_config (
