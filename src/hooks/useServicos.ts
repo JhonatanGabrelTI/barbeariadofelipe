@@ -25,7 +25,9 @@ export function useServicos() {
             if (error) throw error
             return (data || []) as Servico[]
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 30,
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     })
 
     const { data: allServicos = [], isLoading: isLoadingAll } = useQuery({

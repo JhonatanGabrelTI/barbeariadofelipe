@@ -9,9 +9,9 @@ const defaultServices = [
     { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-blue-500 to-blue-600' },
     { name: 'Barba Completa', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-orange-500 to-orange-600' },
     { name: 'Cabelo e Barba', price: 'R$ 65', duration: '50 min', icon: Scissors, popular: true, accent: 'from-emerald-500 to-emerald-600' },
-    { name: 'Sobrancelhas', price: 'R$ 15', duration: '15 min', icon: Scissors, accent: 'from-purple-500 to-purple-600' },
-    { name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: '40 min', icon: Scissors, accent: 'from-indigo-500 to-indigo-600' },
-    { name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: '60 min', icon: Scissors, accent: 'from-rose-500 to-rose-600' },
+    { name: 'Sobrancelhas', price: 'R$ 15', duration: '10 min', icon: Scissors, accent: 'from-purple-500 to-purple-600' },
+    { name: 'Cabelo e Sobrancelhas', price: 'R$ 45', duration: '35 min', icon: Scissors, accent: 'from-indigo-500 to-indigo-600' },
+    { name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: '70 min', icon: Scissors, accent: 'from-rose-500 to-rose-600' },
 ]
 
 const stats = [
@@ -125,9 +125,9 @@ export function Home() {
                         }} />
 
                         {/* Animated floating blobs */}
-                        <div className="absolute top-20 right-10 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-emerald-300/20 rounded-full blur-3xl animate-blob" />
-                        <div className="absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-tr from-emerald-100/40 to-emerald-200/20 rounded-full blur-3xl animate-blob" style={{ animationDelay: '2s' }} />
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-300/10 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }} />
+                        <div className="hidden sm:block absolute top-20 right-10 w-80 h-80 bg-gradient-to-br from-emerald-200/30 to-emerald-300/20 rounded-full blur-3xl animate-blob" />
+                        <div className="hidden sm:block absolute bottom-20 left-10 w-96 h-96 bg-gradient-to-tr from-emerald-100/40 to-emerald-200/20 rounded-full blur-3xl animate-blob" style={{ animationDelay: '2s' }} />
+                        <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-300/10 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }} />
 
                         {/* Floating decorative scissors */}
                         <div className="absolute top-32 left-[15%] animate-float opacity-[0.07]">
@@ -299,8 +299,8 @@ export function Home() {
                 {/* Decorative background elements */}
                 {!(IS_COPA || IS_SAO_JOAO) && (
                     <>
-                        <div className="absolute top-10 left-0 w-64 h-64 bg-emerald-100/20 rounded-full blur-3xl" />
-                        <div className="absolute bottom-10 right-0 w-80 h-80 bg-emerald-50/30 rounded-full blur-3xl" />
+                        <div className="hidden sm:block absolute top-10 left-0 w-64 h-64 bg-emerald-100/20 rounded-full blur-3xl" />
+                        <div className="hidden sm:block absolute bottom-10 right-0 w-80 h-80 bg-emerald-50/30 rounded-full blur-3xl" />
                     </>
                 )}
 

@@ -8,6 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "audit:appointments": "node scripts/audit-agendamentos.mjs",
+    "test:anticonflict": "node scripts/test-anticonflito.mjs",
+    "test:blocks": "node scripts/test-bloqueios.mjs",
     "create:eliabner": "node scripts/create-eliabner-user.mjs",
     "import:backup": "node scripts/import-backup.mjs"
   },

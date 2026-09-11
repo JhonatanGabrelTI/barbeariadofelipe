@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { isTimeInRange, timeRangesOverlap } from '@/lib/time'
 
 export type BlockedSlot = {
     id: string
@@ -50,19 +51,19 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null, multi
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
 
-            const insertPayload = {
-                ...block,
-                created_by: user.id,
-            }
-            let { error } = await supabase.from('blocked_slots').insert(insertPayload)
+            const { data: result, error } = await supabase.rpc('criar_bloqueio_horario', {
+                p_data: block.data,
+                p_hora_inicio: block.hora_inicio,
+                p_hora_fim: block.hora_fim,
+                p_motivo: block.motivo || 'Pausa',
+                p_barbeiro_id: block.barbeiro_id,
+            })
 
-            if (error && (error.code === 'PGRST204' || error.code === '42703')) {
-                const legacyPayload = { ...insertPayload }
-                delete legacyPayload.barbeiro_id
-                const legacy = await supabase.from('blocked_slots').insert(legacyPayload)
-                error = legacy.error
-            }
             if (error) throw error
+            if (result && !result.success) {
+                throw new Error(result.message || 'Não foi possível bloquear esse horário.')
+            }
+            return result.data as BlockedSlot
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['blocked-slots'] })
@@ -81,10 +82,11 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null, multi
 
     // Helper: check if a specific time is blocked on a given date
     const isTimeBlocked = (time: string): boolean => {
-        return blockedSlots.some(slot => {
-            return time >= slot.hora_inicio && time < slot.hora_fim
-        })
+        return blockedSlots.some(slot => isTimeInRange(time, slot.hora_inicio, slot.hora_fim))
     }
 
-    return { blockedSlots, isLoading, createBlock, deleteBlock, isTimeBlocked }
+    const isIntervalBlocked = (start: string, end: string): boolean =>
+        blockedSlots.some(slot => timeRangesOverlap(start, end, slot.hora_inicio, slot.hora_fim))
+
+    return { blockedSlots, isLoading, createBlock, deleteBlock, isTimeBlocked, isIntervalBlocked }
 }

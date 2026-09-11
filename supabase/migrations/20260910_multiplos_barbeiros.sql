@@ -2,6 +2,7 @@
 -- Pode ser executada tanto no banco antigo quanto em um projeto Supabase vazio.
 
 create extension if not exists pgcrypto;
+create extension if not exists btree_gist;
 
 create table if not exists public.servicos (
     id uuid primary key default gen_random_uuid(), nome text not null unique,
@@ -86,6 +87,16 @@ alter table public.blocked_slots
 create index if not exists agendamentos_barbeiro_data_idx on public.agendamentos (barbeiro_id,data_hora);
 create index if not exists agendamentos_user_idx on public.agendamentos (user_id);
 create index if not exists blocked_slots_barbeiro_data_idx on public.blocked_slots (barbeiro_id,data);
+
+create or replace function public.intervalo_agendamento(
+    p_data_hora timestamptz,p_duracao_minutos integer)
+returns int8range language sql immutable strict parallel safe set search_path=pg_catalog as $$
+    select int8range(
+        extract(epoch from p_data_hora)::bigint,
+        extract(epoch from p_data_hora)::bigint+p_duracao_minutos::bigint*60,
+        '[)'
+    );
+$$;
 
 create or replace function public.current_barbeiro_id() returns uuid language sql stable security definer
 set search_path=public as $$
@@ -225,6 +236,15 @@ begin
 end;
 $$;
 grant execute on function public.agendar_horario_com_barbeiro(uuid,text,text,text,timestamptz,integer,uuid) to anon,authenticated;
+
+alter table public.agendamentos
+    drop constraint if exists agendamentos_sem_sobreposicao_confirmada;
+alter table public.agendamentos
+    add constraint agendamentos_sem_sobreposicao_confirmada
+    exclude using gist (
+        barbeiro_id with =,
+        public.intervalo_agendamento(data_hora,duracao_minutos) with &&
+    ) where (status='confirmado');
 
 do $$ begin
     if not exists(select 1 from pg_publication_tables where pubname='supabase_realtime'

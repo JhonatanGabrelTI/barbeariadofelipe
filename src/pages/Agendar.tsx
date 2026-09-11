@@ -82,7 +82,7 @@ export function Agendar() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
     const [selectedBarbeiro, setSelectedBarbeiro] = useState<string | null>(null)
-    const { isTimeBlocked } = useBlockedSlots(dateStr, selectedBarbeiro, multiBarberEnabled)
+    const { isIntervalBlocked } = useBlockedSlots(dateStr, selectedBarbeiro, multiBarberEnabled)
     const {
         data: publicAgendamentos = [],
         isLoading: isLoadingPublic,
@@ -196,6 +196,10 @@ export function Agendar() {
                 return
             }
 
+            // Atualiza a agenda imediatamente antes da confirmação. O banco ainda é
+            // a autoridade final caso dois aparelhos confirmem no mesmo instante.
+            await refetchPublic()
+
             await createAgendamento.mutateAsync({
                 whatsapp,
                 nome_cliente: nomeCliente || undefined,
@@ -251,10 +255,7 @@ export function Agendar() {
     }, [publicAgendamentos])
 
     const getSlotBlockReason = useCallback((time: string): BlockReason | null => {
-        // 1. Check if manually blocked by admin
-        if (isTimeBlocked(time)) return 'blocked'
-
-        // 2. If date is today, check if time has already passed
+        // 1. If date is today, check if time has already passed
         const now = new Date()
         if (selectedDate && isToday(selectedDate)) {
             const [hours, minutes] = time.split(':').map(Number)
@@ -271,6 +272,11 @@ export function Agendar() {
         // Duration of the service the user selected (in minutes)
         const selectedDuration = selectedServiceData?.duration || 30
         const slotEnd = addMinutes(slotStart, selectedDuration)
+
+        const slotEndTime = format(slotEnd, 'HH:mm')
+
+        // 2. Check the complete service interval against manual blocks.
+        if (isIntervalBlocked(time, slotEndTime)) return 'blocked'
 
         // 3. Check if THIS slot itself is directly occupied (30-min base check)
         if (isSlotDirectlyOccupied(slotStart)) return 'occupied'
@@ -292,17 +298,10 @@ export function Agendar() {
                 }
             }
 
-            // Also check if any of the intermediate slots are blocked by admin
-            let checkTime = addMinutes(slotStart, 30)
-            while (checkTime < slotEnd) {
-                const checkTimeStr = `${String(checkTime.getHours()).padStart(2, '0')}:${String(checkTime.getMinutes()).padStart(2, '0')}`
-                if (isTimeBlocked(checkTimeStr)) return 'next-occupied'
-                checkTime = addMinutes(checkTime, 30)
-            }
         }
 
         return null
-    }, [isTimeBlocked, publicAgendamentos, selectedDate, selectedServiceData, isSlotDirectlyOccupied])
+    }, [isIntervalBlocked, publicAgendamentos, selectedDate, selectedServiceData, isSlotDirectlyOccupied])
 
     const today = startOfDay(new Date())
     const maxDate = addDays(today, 90)

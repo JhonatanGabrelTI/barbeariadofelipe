@@ -42,22 +42,7 @@ export function useAgendamentos() {
                 p_barbeiro_id: data.barbeiro_id,
             }
 
-            let { data: result, error } = await supabase.rpc('agendar_horario_com_barbeiro', payload)
-
-            // Mantém o agendamento de Felipe funcionando até a migração de múltiplos barbeiros ser aplicada.
-            if (error && (error.code === 'PGRST202' || error.code === '42883')) {
-                const legacyPayload = {
-                    p_user_id: payload.p_user_id,
-                    p_nome_cliente: payload.p_nome_cliente,
-                    p_whatsapp: payload.p_whatsapp,
-                    p_servico: payload.p_servico,
-                    p_data_hora: payload.p_data_hora,
-                    p_duracao_minutos: payload.p_duracao_minutos,
-                }
-                const legacy = await supabase.rpc('agendar_horario_seguro', legacyPayload)
-                result = legacy.data
-                error = legacy.error
-            }
+            const { data: result, error } = await supabase.rpc('agendar_horario_com_barbeiro', payload)
 
             if (error) throw error
 

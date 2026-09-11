@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { format, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Lock, Unlock, Clock, CalendarOff, Ban } from 'lucide-react'
+import { isTimeInRange } from '@/lib/time'
 
 const allTimeSlots = [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -65,8 +66,8 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
                 barbeiro_id: barbeiroId,
             })
             toast.success(`✅ Horário ${time} bloqueado!`)
-        } catch {
-            toast.error('❌ Erro ao bloquear horário.')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : '❌ Erro ao bloquear horário.')
         } finally {
             setIsSubmitting(false)
         }
@@ -92,8 +93,8 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
             setHoraInicio('')
             setHoraFim('')
             setMotivo('Pausa')
-        } catch {
-            toast.error('❌ Erro ao bloquear horários.')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : '❌ Erro ao bloquear horários.')
         } finally {
             setIsSubmitting(false)
         }
@@ -109,11 +110,11 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
     }, [deleteBlock])
 
     const isSlotBlocked = (time: string) => {
-        return blockedSlots.some(slot => time >= slot.hora_inicio && time < slot.hora_fim)
+        return blockedSlots.some(slot => isTimeInRange(time, slot.hora_inicio, slot.hora_fim))
     }
 
     const getBlockForSlot = (time: string) => {
-        return blockedSlots.find(slot => time >= slot.hora_inicio && time < slot.hora_fim)
+        return blockedSlots.find(slot => isTimeInRange(time, slot.hora_inicio, slot.hora_fim))
     }
 
     return (

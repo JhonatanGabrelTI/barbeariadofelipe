@@ -71,7 +71,7 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null,
         },
         enabled: !!date && !!barbeiroId,
         staleTime: 0,                   // Always consider data stale — never serve from cache
-        refetchInterval: 1000 * 5,      // Poll every 5 seconds as fallback (was 10s)
+        refetchInterval: 1000 * 3,      // Atualização frequente sem expor dados pessoais no Realtime
         refetchOnWindowFocus: true,     // Refetch when user returns to tab
         refetchOnMount: 'always',       // Always refetch when component mounts
     })
