@@ -18,11 +18,12 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { format, addDays, addMinutes, isBefore, isToday, startOfDay, setHours, setMinutes } from 'date-fns'
+import { format, addDays, addMinutes, isBefore, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info, Phone, RefreshCw, Sparkles, ChevronRight, Shield } from 'lucide-react'
 import { IS_SAO_JOAO, IS_COPA } from '../config'
 import { BARBEIROS, getBarbeiro } from '@/data/barbeiros'
+import { barbershopDateTimeToDate, formatBarbershopDateTime, getBarbershopDateKey } from '@/lib/time'
 
 const defaultServices = [
     { id: 'corte-cabelo', name: 'Corte de Cabelo', price: 'R$ 35', duration: 30 },
@@ -97,6 +98,7 @@ export function Agendar() {
     const [showConfirmDialog, setShowConfirmDialog] = useState(false)
     const [showLoginDialog, setShowLoginDialog] = useState(false)
     const [isBooking, setIsBooking] = useState(false)
+    const bookingLock = useRef(false)
     const [isLoggingIn, setIsLoggingIn] = useState(false)
     const [magicLinkSent, setMagicLinkSent] = useState(false)
     const [showSuccessDialog, setShowSuccessDialog] = useState(false)
@@ -176,17 +178,24 @@ export function Agendar() {
         setStep('datetime')
     }, [])
 
+    const handleDateSelect = useCallback((date: Date | undefined) => {
+        setSelectedDate(date)
+        setSelectedTime(null)
+    }, [])
+
     const handleConfirmBooking = useCallback(async () => {
+        if (bookingLock.current) return
         if (!selectedDate || !selectedTime || !selectedService || !selectedBarbeiro || !whatsapp) return
         if (!nomeCliente) {
             toast.error('❌ Por favor, informe seu nome.')
             return
         }
 
+        bookingLock.current = true
         setIsBooking(true)
         const service = services.find(s => s.id === selectedService)
-        const [hours, minutes] = selectedTime.split(':').map(Number)
-        const dateTime = setMinutes(setHours(selectedDate, hours), minutes)
+        const selectedDateKey = format(selectedDate, 'yyyy-MM-dd')
+        const dateTime = barbershopDateTimeToDate(selectedDateKey, selectedTime)
 
         try {
             if (!isSupabaseConfigured) {
@@ -198,7 +207,10 @@ export function Agendar() {
 
             // Atualiza a agenda imediatamente antes da confirmação. O banco ainda é
             // a autoridade final caso dois aparelhos confirmem no mesmo instante.
-            await refetchPublic()
+            const latestAvailability = await refetchPublic()
+            if (latestAvailability.error) {
+                throw new Error('Não foi possível atualizar a agenda. Verifique sua internet e tente novamente.')
+            }
 
             await createAgendamento.mutateAsync({
                 whatsapp,
@@ -229,6 +241,7 @@ export function Agendar() {
             // Immediately refetch to show the updated availability after a failed booking
             refetchPublic()
         } finally {
+            bookingLock.current = false
             setIsBooking(false)
         }
     }, [selectedDate, selectedTime, selectedService, selectedBarbeiro, whatsapp, nomeCliente, services, createAgendamento, refetchPublic])
@@ -257,17 +270,16 @@ export function Agendar() {
     const getSlotBlockReason = useCallback((time: string): BlockReason | null => {
         // 1. If date is today, check if time has already passed
         const now = new Date()
-        if (selectedDate && isToday(selectedDate)) {
-            const [hours, minutes] = time.split(':').map(Number)
-            const slotDateTime = setMinutes(setHours(startOfDay(selectedDate), hours), minutes)
+        const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null
+        if (selectedDateKey && selectedDateKey === getBarbershopDateKey(now)) {
+            const slotDateTime = barbershopDateTimeToDate(selectedDateKey, time)
             if (isBefore(slotDateTime, now)) return 'past'
         }
 
         if (!selectedDate) return null
 
         // Parse the candidate slot start time
-        const [slotH, slotM] = time.split(':').map(Number)
-        const slotStart = setMinutes(setHours(startOfDay(selectedDate), slotH), slotM)
+        const slotStart = barbershopDateTimeToDate(selectedDateKey!, time)
 
         // Duration of the service the user selected (in minutes)
         const selectedDuration = selectedServiceData?.duration || 30
@@ -282,7 +294,7 @@ export function Agendar() {
         if (isSlotDirectlyOccupied(slotStart)) return 'occupied'
 
         // 4. Check if the selected service would go past the last slot (20:00)
-        const lastSlotEnd = setMinutes(setHours(startOfDay(selectedDate), 20), 0)
+        const lastSlotEnd = barbershopDateTimeToDate(selectedDateKey!, '20:00')
         if (slotEnd > lastSlotEnd) return 'exceeds-hours'
 
         // 5. For services > 30min, check if the extended time overlaps with occupied slots
@@ -596,7 +608,7 @@ export function Agendar() {
                                 <Calendar
                                     mode="single"
                                     selected={selectedDate}
-                                    onSelect={setSelectedDate}
+                                    onSelect={handleDateSelect}
                                     disabled={isDateDisabled}
                                     locale={ptBR}
                                     className="mx-auto"
@@ -861,7 +873,7 @@ export function Agendar() {
                                             <h3 className="font-semibold text-gray-800">{agendamento.servico}</h3>
                                             <p className="text-xs font-medium text-emerald-600">Com {getBarbeiro(agendamento.barbeiro_id)?.nome || 'barbeiro'}</p>
                                             <p className="text-sm text-gray-400">
-                                                {format(new Date(agendamento.data_hora), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                                {formatBarbershopDateTime(agendamento.data_hora).replace(',', ' às')}
                                             </p>
                                         </div>
                                     </div>

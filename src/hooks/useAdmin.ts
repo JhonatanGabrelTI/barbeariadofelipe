@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import type { Agendamento } from '@/lib/supabase'
 
 export type StaffRole = 'dono' | 'barbeiro'
 
@@ -17,6 +18,31 @@ export type StaffMember = {
 
 function isMissingBarbeirosTable(code?: string) {
     return code === 'PGRST205' || code === '42P01'
+}
+
+const APPOINTMENTS_PAGE_SIZE = 500
+
+async function fetchAllAppointments(currentStaff: StaffMember | null, isOwner: boolean) {
+    const appointments: Agendamento[] = []
+
+    for (let from = 0; ; from += APPOINTMENTS_PAGE_SIZE) {
+        let query = supabase
+            .from('agendamentos')
+            .select('*')
+            .order('data_hora', { ascending: true })
+            .order('id', { ascending: true })
+
+        if (!isOwner && currentStaff) query = query.eq('barbeiro_id', currentStaff.id)
+
+        const { data, error } = await query.range(from, from + APPOINTMENTS_PAGE_SIZE - 1)
+        if (error) throw error
+
+        const page = (data || []) as Agendamento[]
+        appointments.push(...page)
+        if (page.length < APPOINTMENTS_PAGE_SIZE) break
+    }
+
+    return appointments
 }
 
 export function useAdmin() {
@@ -96,20 +122,15 @@ export function useAdmin() {
     const { data: allAgendamentos = [], isLoading } = useQuery({
         queryKey: ['all-agendamentos', currentStaff?.id, isOwner],
         queryFn: async () => {
-            let query = supabase
-                .from('agendamentos')
-                .select('*')
-                .order('data_hora', { ascending: true })
-
-            if (!isOwner && currentStaff) query = query.eq('barbeiro_id', currentStaff.id)
-
-            const { data, error } = await query
-            if (error) throw error
-            return data || []
+            return fetchAllAppointments(currentStaff, isOwner)
         },
         enabled: isAdmin,
-        staleTime: 1000 * 30,
-        refetchInterval: 1000 * 30,
+        staleTime: 1000 * 10,
+        refetchInterval: 1000 * 15,
+        refetchIntervalInBackground: true,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: 'always',
+        refetchOnReconnect: 'always',
     })
 
     useEffect(() => {

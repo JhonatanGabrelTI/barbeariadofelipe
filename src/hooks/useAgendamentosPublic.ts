@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Agendamento } from '@/lib/supabase'
+import { addDaysToDateKey, barbershopDateTimeToDate } from '@/lib/time'
 
 export function useAgendamentosPublic(date?: string, barbeiroId?: string | null, multiBarberEnabled = true) {
     const queryClient = useQueryClient()
@@ -37,16 +38,11 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null,
         queryFn: async () => {
             if (!date) return []
 
-            // Query a wider window (3 days) to guarantee that timezone differences 
-            // between UTC and local time never clip valid appointments at the edges of the day.
-            const d = new Date(date)
-            const prev = new Date(d)
-            prev.setDate(prev.getDate() - 1)
-            const next = new Date(d)
-            next.setDate(next.getDate() + 1)
-
-            const startStr = `${prev.toISOString().split('T')[0]}T00:00:00.000Z`
-            const endStr = `${next.toISOString().split('T')[0]}T23:59:59.999Z`
+            // Consulta exatamente o dia da barbearia, independentemente do fuso
+            // configurado no aparelho de quem esta agendando.
+            const startStr = barbershopDateTimeToDate(date, '00:00').toISOString()
+            const nextDay = barbershopDateTimeToDate(addDaysToDateKey(date, 1), '00:00')
+            const endStr = new Date(nextDay.getTime() - 1).toISOString()
 
             if (multiBarberEnabled && barbeiroId) {
                 const result = await supabase.rpc('listar_agendamentos_publicos', {
@@ -54,7 +50,9 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null,
                     p_fim: endStr,
                     p_barbeiro_id: barbeiroId,
                 })
-                if (!result.error) return result.data as Partial<Agendamento>[]
+                if (!result.error) {
+                    return Array.isArray(result.data) ? result.data as Partial<Agendamento>[] : []
+                }
                 if (result.error.code !== 'PGRST202' && result.error.code !== '42883') throw result.error
             }
 
@@ -71,7 +69,9 @@ export function useAgendamentosPublic(date?: string, barbeiroId?: string | null,
         },
         enabled: !!date && !!barbeiroId,
         staleTime: 0,                   // Always consider data stale — never serve from cache
-        refetchInterval: 1000 * 3,      // Atualização frequente sem expor dados pessoais no Realtime
+        refetchInterval: 1000 * 5,
+        refetchIntervalInBackground: true,
+        refetchOnReconnect: 'always',
         refetchOnWindowFocus: true,     // Refetch when user returns to tab
         refetchOnMount: 'always',       // Always refetch when component mounts
     })

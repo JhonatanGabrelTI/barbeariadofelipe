@@ -21,8 +21,9 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { format, isToday, isTomorrow, isPast, startOfDay, addDays } from 'date-fns'
+import { format, isPast } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { addDaysToDateKey, formatBarbershopLongDateTime, formatBarbershopShortDate, formatBarbershopTime, getBarbershopDateKey } from '@/lib/time'
 import {
     CalendarOff,
     Clock,
@@ -53,6 +54,27 @@ import {
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
 type FilterPeriod = 'hoje' | 'amanha' | 'semana' | 'todos'
 type Tab = 'agendamentos' | 'clientes' | 'bloqueados' | 'horarios' | 'servicos' | 'config' | 'produtos' | 'financeiro'
+
+const BACKUP_PAGE_SIZE = 500
+
+async function fetchAllBackupRows(table: 'agendamentos' | 'servicos' | 'produtos' | 'blocked_slots' | 'blocked_clients' | 'whatsapp_config' | 'admin_emails') {
+    const rows: unknown[] = []
+
+    for (let from = 0; ; from += BACKUP_PAGE_SIZE) {
+        const { data, error } = await supabase
+            .from(table)
+            .select('*')
+            .order(table === 'admin_emails' ? 'email' : 'id', { ascending: true })
+            .range(from, from + BACKUP_PAGE_SIZE - 1)
+
+        if (error) throw new Error(`${table}: ${error.message}`)
+        const page = data || []
+        rows.push(...page)
+        if (page.length < BACKUP_PAGE_SIZE) break
+    }
+
+    return rows
+}
 
 function previewAppointments() {
     const at = (dayOffset: number, hour: number, minute = 0) => {
@@ -193,24 +215,22 @@ export function Painel() {
             filtered = filtered.filter(a => a.status === filterStatus)
         }
 
-        const today = startOfDay(new Date())
-        const tomorrow = startOfDay(addDays(today, 1))
-        const weekEnd = startOfDay(addDays(today, 7))
+        const todayKey = getBarbershopDateKey(new Date())
+        const tomorrowKey = addDaysToDateKey(todayKey, 1)
+        const weekEndKey = addDaysToDateKey(todayKey, 7)
 
         if (filterPeriod === 'hoje') {
             filtered = filtered.filter(a => {
-                const d = startOfDay(new Date(a.data_hora))
-                return d.getTime() === today.getTime()
+                return getBarbershopDateKey(a.data_hora) === todayKey
             })
         } else if (filterPeriod === 'amanha') {
             filtered = filtered.filter(a => {
-                const d = startOfDay(new Date(a.data_hora))
-                return d.getTime() === tomorrow.getTime()
+                return getBarbershopDateKey(a.data_hora) === tomorrowKey
             })
         } else if (filterPeriod === 'semana') {
             filtered = filtered.filter(a => {
-                const d = new Date(a.data_hora)
-                return d >= today && d < weekEnd
+                const key = getBarbershopDateKey(a.data_hora)
+                return key >= todayKey && key < weekEndKey
             })
         }
 
@@ -230,10 +250,9 @@ export function Painel() {
     }, [allAgendamentos])
 
     const stats = useMemo(() => {
-        const today = startOfDay(new Date())
+        const todayKey = getBarbershopDateKey(new Date())
         const todayAppointments = allAgendamentos.filter(a => {
-            const d = startOfDay(new Date(a.data_hora))
-            return d.getTime() === today.getTime() && a.status === 'confirmado'
+            return getBarbershopDateKey(a.data_hora) === todayKey && a.status === 'confirmado'
         })
         const confirmed = allAgendamentos.filter(a => a.status === 'confirmado').length
         const completed = allAgendamentos.filter(a => a.status === 'realizado').length
@@ -244,14 +263,14 @@ export function Painel() {
         }, 0)
 
         const now = new Date()
-        const startOfSecondDay = new Date(now.getFullYear(), now.getMonth(), 2)
+        const startOfSelectedMonth = new Date(now.getFullYear(), now.getMonth(), 1)
         const endOfSelectedMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
 
         const totalConfirmedRevenue = allAgendamentos
             .filter(a => a.status === 'confirmado' || a.status === 'realizado')
             .filter(a => {
                 const d = new Date(a.data_hora)
-                return d >= startOfSecondDay && d <= endOfSelectedMonth
+                return d >= startOfSelectedMonth && d <= endOfSelectedMonth
             })
             .reduce((acc, a) => {
                 const price = servicePrices[a.servico] || 0
@@ -265,14 +284,14 @@ export function Painel() {
     const historyByMonth = useMemo(() => {
         return availableMonths.map(m => {
             const [year, month] = m.split('-').map(Number)
-            const startOfSecondDay = new Date(year, month - 1, 2)
+            const startOfSelectedMonth = new Date(year, month - 1, 1)
             const endOfSelectedMonth = new Date(year, month, 0, 23, 59, 59, 999)
             
             const revenue = allAgendamentos
                 .filter(a => a.status === 'confirmado' || a.status === 'realizado')
                 .filter(a => {
                     const d = new Date(a.data_hora)
-                    return d >= startOfSecondDay && d <= endOfSelectedMonth
+                    return d >= startOfSelectedMonth && d <= endOfSelectedMonth
                 })
                 .reduce((acc, a) => acc + (servicePrices[a.servico] || 0), 0)
                 
@@ -313,9 +332,7 @@ export function Painel() {
             }
 
             for (const table of tableNames) {
-                const { data, error } = await supabase.from(table).select('*')
-                if (error) throw new Error(`${table}: ${error.message}`)
-                backup[table] = data || []
+                backup[table] = await fetchAllBackupRows(table)
             }
 
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
@@ -1088,7 +1105,13 @@ export function Painel() {
                                 {filteredAgendamentos.map((agendamento) => {
                                     const dateTime = new Date(agendamento.data_hora)
                                     const isPassedTime = isPast(dateTime)
-                                    const dayLabel = isToday(dateTime) ? 'Hoje' : isTomorrow(dateTime) ? 'Amanhã' : format(dateTime, "dd/MM", { locale: ptBR })
+                                    const appointmentDateKey = getBarbershopDateKey(dateTime)
+                                    const todayKey = getBarbershopDateKey(new Date())
+                                    const dayLabel = appointmentDateKey === todayKey
+                                        ? 'Hoje'
+                                        : appointmentDateKey === addDaysToDateKey(todayKey, 1)
+                                            ? 'Amanhã'
+                                            : formatBarbershopShortDate(dateTime)
 
                                     return (
                                         <div
@@ -1116,7 +1139,7 @@ export function Painel() {
                                                                 agendamento.status === 'realizado' ? 'text-green-500' :
                                                                     'text-emerald-500'
                                                         ].join(' ')}>
-                                                            {format(dateTime, 'HH:mm')}
+                                                            {formatBarbershopTime(dateTime)}
                                                         </span>
                                                     </div>
 
@@ -1141,7 +1164,7 @@ export function Painel() {
                                                             )}
                                                         </div>
                                                         <p className="text-xs text-gray-300 mt-1">
-                                                            {format(dateTime, "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                                                            {formatBarbershopLongDateTime(dateTime)}
                                                         </p>
                                                     </div>
                                                 </div>
