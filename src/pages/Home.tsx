@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useServicos } from '@/hooks/useServicos'
 import { Phone, MapPin, Scissors, Star, Clock, Users, ChevronRight, Sparkles, ChevronDown, Shield, Zap, Award } from 'lucide-react'
 import { IS_SAO_JOAO, IS_COPA } from '../config'
+import { usePublicStats } from '@/hooks/usePublicStats'
 
 const defaultServices = [
     { name: 'Corte de Cabelo', price: 'R$ 35', duration: '30 min', icon: Scissors, accent: 'from-blue-500 to-blue-600' },
@@ -14,8 +15,7 @@ const defaultServices = [
     { name: 'Cabelo, Barba e Sobrancelhas', price: 'R$ 75', duration: '70 min', icon: Scissors, accent: 'from-rose-500 to-rose-600' },
 ]
 
-const stats = [
-    { label: 'Clientes Satisfeitos', value: '2.000+', numericValue: 2000, icon: Users, color: 'text-blue-500', bg: 'from-blue-100 to-blue-200/60', hoverBg: 'group-hover:from-blue-500 group-hover:to-blue-600' },
+const fixedStats = [
     { label: 'Anos de Experiência', value: '6+', numericValue: 6, icon: Clock, color: 'text-emerald-600', bg: 'from-emerald-100 to-emerald-200/60', hoverBg: 'group-hover:from-emerald-500 group-hover:to-emerald-600' },
     { label: 'Avaliação Média', value: '4.9', numericValue: 4.9, icon: Star, color: 'text-amber-500', bg: 'from-amber-100 to-amber-200/60', hoverBg: 'group-hover:from-amber-500 group-hover:to-amber-600' },
 ]
@@ -65,6 +65,20 @@ function useScrollReveal() {
 export function Home() {
     const scrollRef = useScrollReveal()
     const { servicos } = useServicos()
+    const { data: publicStats } = usePublicStats()
+    const totalAppointments = publicStats?.total_agendamentos ?? 0
+    const stats = [
+        {
+            label: 'Clientes Satisfeitos',
+            value: publicStats ? `${totalAppointments}+` : '...',
+            numericValue: totalAppointments,
+            icon: Users,
+            color: 'text-blue-500',
+            bg: 'from-blue-100 to-blue-200/60',
+            hoverBg: 'group-hover:from-blue-500 group-hover:to-blue-600',
+        },
+        ...fixedStats,
+    ]
 
     // Use dynamic services from Supabase, fallback to defaults while loading
     const services = servicos.length > 0
@@ -510,9 +524,11 @@ function StatCard({ stat, delay }: {
     }, [])
 
     // Format display: preserve original format (e.g. '2.000+', '6+', '4.9')
-    const displayValue = stat.value.includes('.')
+    const displayValue = stat.value === '...'
+        ? stat.value
+        : stat.value.includes('.')
         ? `${count.toFixed(1)}${stat.value.replace(/[\d.]/g, '').trim()}`
-        : `${Math.floor(count)}${stat.value.replace(/\d+/g, '').trim()}`
+        : `${Math.floor(count).toLocaleString('pt-BR')}${stat.value.replace(/[\d.]/g, '').trim()}`
 
     return (
         <div

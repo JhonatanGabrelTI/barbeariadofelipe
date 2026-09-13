@@ -1,7 +1,13 @@
 import { Scissors, MapPin, Phone, Clock, Heart } from 'lucide-react'
 import { IS_SAO_JOAO, IS_COPA } from '../config'
+import { usePublicStats } from '@/hooks/usePublicStats'
 
 export function Footer() {
+    const { data: publicStats } = usePublicStats()
+    const appointmentCount = publicStats
+        ? `${publicStats.total_agendamentos.toLocaleString('pt-BR')}+ agendamentos`
+        : 'agendamentos atualizados em tempo real'
+
     return (
         <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white overflow-hidden">
             {IS_COPA && (
@@ -59,7 +65,7 @@ export function Footer() {
                                     </div>
                                 ))}
                             </div>
-                            <span className="text-xs text-gray-400">4.9 • 2.000+ clientes</span>
+                            <span className="text-xs text-gray-400">4.9 • {appointmentCount}</span>
                         </div>
                     </div>
 
