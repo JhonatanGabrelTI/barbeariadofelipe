@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
 type PublicStats = {
-    total_agendamentos: number
+    total_atendimentos_concluidos: number
 }
 
 export function usePublicStats() {
@@ -14,7 +14,7 @@ export function usePublicStats() {
 
             const row = Array.isArray(data) ? data[0] : data
             return {
-                total_agendamentos: Number(row?.total_agendamentos || 0),
+                total_atendimentos_concluidos: Number(row?.total_atendimentos_concluidos || 0),
             }
         },
         staleTime: 1000 * 25,

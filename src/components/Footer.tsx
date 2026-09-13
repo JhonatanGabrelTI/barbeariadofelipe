@@ -5,8 +5,8 @@ import { usePublicStats } from '@/hooks/usePublicStats'
 export function Footer() {
     const { data: publicStats } = usePublicStats()
     const appointmentCount = publicStats
-        ? `${publicStats.total_agendamentos.toLocaleString('pt-BR')}+ agendamentos`
-        : 'agendamentos atualizados em tempo real'
+        ? `${publicStats.total_atendimentos_concluidos.toLocaleString('pt-BR')}+ cortes concluídos`
+        : 'cortes atualizados em tempo real'
 
     return (
         <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white overflow-hidden">

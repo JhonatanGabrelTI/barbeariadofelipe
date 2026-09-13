@@ -66,12 +66,12 @@ export function Home() {
     const scrollRef = useScrollReveal()
     const { servicos } = useServicos()
     const { data: publicStats } = usePublicStats()
-    const totalAppointments = publicStats?.total_agendamentos ?? 0
+    const completedAppointments = publicStats?.total_atendimentos_concluidos ?? 0
     const stats = [
         {
             label: 'Clientes Satisfeitos',
-            value: publicStats ? `${totalAppointments}+` : '...',
-            numericValue: totalAppointments,
+            value: publicStats ? `${completedAppointments}+` : '...',
+            numericValue: completedAppointments,
             icon: Users,
             color: 'text-blue-500',
             bg: 'from-blue-100 to-blue-200/60',
