@@ -16,12 +16,25 @@ interface FinanceiroProps {
     servicePrices: Record<string, number>
     title?: string
     compact?: boolean
+    revenueShare?: number
 }
 
 type Period = 'hoje' | 'semana' | 'mes'
 
-export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro', compact = false }: FinanceiroProps) {
+export function Financeiro({
+    allAgendamentos,
+    servicePrices,
+    title = 'Financeiro',
+    compact = false,
+    revenueShare = 1,
+}: FinanceiroProps) {
     const [period, setPeriod] = useState<Period>('hoje')
+    const effectiveShare = Math.min(1, Math.max(0, revenueShare))
+    const isCommissionView = effectiveShare < 1
+    const formatMoney = (value: number) => value.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })
 
     const finance = useMemo(() => {
         const now = new Date()
@@ -36,7 +49,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
         const valid = allAgendamentos.filter(a => a.status === 'confirmado' || a.status === 'realizado')
 
         const getRevenue = (items: any[]) =>
-            items.reduce((acc: number, a: any) => acc + (servicePrices[a.servico] || 0), 0)
+            items.reduce((acc: number, a: any) => acc + (servicePrices[a.servico] || 0) * effectiveShare, 0)
 
         // Today's data
         const todayItems = valid.filter(a => {
@@ -78,7 +91,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
         const currentCount = currentItems.length
 
         // Average ticket
-        const avgTicket = currentCount > 0 ? Math.round(currentRevenue / currentCount) : 0
+        const avgTicket = currentCount > 0 ? currentRevenue / currentCount : 0
 
         // Most popular service
         const serviceCount: Record<string, number> = {}
@@ -93,7 +106,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                 const name = a.servico
                 if (!acc[name]) acc[name] = { count: 0, revenue: 0 }
                 acc[name].count++
-                acc[name].revenue += servicePrices[name] || 0
+                acc[name].revenue += (servicePrices[name] || 0) * effectiveShare
                 return acc
             }, {})
         ).sort((a, b) => b[1].revenue - a[1].revenue)
@@ -115,7 +128,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
             revenueByService,
             recentCompleted,
         }
-    }, [allAgendamentos, period, servicePrices])
+    }, [allAgendamentos, effectiveShare, period, servicePrices])
 
     const periodLabels: Record<Period, string> = {
         hoje: 'Hoje',
@@ -151,9 +164,11 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                 <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl p-5 shadow-lg shadow-emerald-500/20">
                     <div className="flex items-center gap-2 mb-3">
                         <DollarSign className="w-5 h-5 text-emerald-100" />
-                        <span className="text-xs text-emerald-100 font-bold uppercase tracking-wider">Faturamento</span>
+                        <span className="text-xs text-emerald-100 font-bold uppercase tracking-wider">
+                            {isCommissionView ? 'Lucro líquido (50%)' : 'Faturamento'}
+                        </span>
                     </div>
-                    <p className="text-3xl font-black">R$ {finance.currentRevenue}</p>
+                    <p className="text-3xl font-black">R$ {formatMoney(finance.currentRevenue)}</p>
                     <p className="text-[10px] text-emerald-200 mt-1">{periodLabels[period]}</p>
                 </div>
 
@@ -171,7 +186,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                         <BarChart3 className="w-5 h-5 text-purple-500" />
                         <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Ticket Médio</span>
                     </div>
-                    <p className="text-3xl font-black text-gray-800">R$ {finance.avgTicket}</p>
+                    <p className="text-3xl font-black text-gray-800">R$ {formatMoney(finance.avgTicket)}</p>
                     <p className="text-[10px] text-gray-400 mt-1">por atendimento</p>
                 </div>
 
@@ -181,7 +196,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                         <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Mês</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <p className="text-3xl font-black text-gray-800">R$ {finance.monthRevenue}</p>
+                        <p className="text-3xl font-black text-gray-800">R$ {formatMoney(finance.monthRevenue)}</p>
                     </div>
                     {finance.monthGrowth !== 0 && (
                         <div className={[
@@ -198,7 +213,9 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
             {/* Revenue by Service */}
             {finance.revenueByService.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                    <h3 className="text-sm font-bold text-gray-700 mb-4">📊 Faturamento por Serviço</h3>
+                    <h3 className="text-sm font-bold text-gray-700 mb-4">
+                        📊 {isCommissionView ? 'Lucro por Serviço (50%)' : 'Faturamento por Serviço'}
+                    </h3>
                     <div className="space-y-3">
                         {finance.revenueByService.map(([name, data]) => {
                             const maxRevenue = finance.revenueByService[0][1].revenue
@@ -209,7 +226,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                                         <span className="text-sm font-medium text-gray-700">{name}</span>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xs text-gray-400">{data.count}x</span>
-                                            <span className="text-sm font-bold text-emerald-600">R$ {data.revenue}</span>
+                                            <span className="text-sm font-bold text-emerald-600">R$ {formatMoney(data.revenue)}</span>
                                         </div>
                                     </div>
                                     <div className="w-full bg-gray-100 rounded-full h-2">
@@ -229,15 +246,15 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
                     <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider mb-1">Hoje</p>
-                    <p className="text-2xl font-black text-emerald-700">R$ {finance.todayRevenue}</p>
+                    <p className="text-2xl font-black text-emerald-700">R$ {formatMoney(finance.todayRevenue)}</p>
                 </div>
                 <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
                     <p className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Esta Semana</p>
-                    <p className="text-2xl font-black text-blue-700">R$ {finance.weekRevenue}</p>
+                    <p className="text-2xl font-black text-blue-700">R$ {formatMoney(finance.weekRevenue)}</p>
                 </div>
                 <div className="bg-purple-50 rounded-2xl p-5 border border-purple-100">
                     <p className="text-xs text-purple-600 font-bold uppercase tracking-wider mb-1">Este Mês</p>
-                    <p className="text-2xl font-black text-purple-700">R$ {finance.monthRevenue}</p>
+                    <p className="text-2xl font-black text-purple-700">R$ {formatMoney(finance.monthRevenue)}</p>
                 </div>
             </div>
 
@@ -263,7 +280,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                     <h3 className="text-sm font-bold text-gray-700 mb-4">🕐 Últimos Atendimentos</h3>
                     <div className="space-y-3">
                         {finance.recentCompleted.map((a: any, i: number) => {
-                            const price = servicePrices[a.servico] || 0
+                            const price = (servicePrices[a.servico] || 0) * effectiveShare
                             const dt = new Date(a.data_hora)
                             return (
                                 <div
@@ -285,7 +302,7 @@ export function Financeiro({ allAgendamentos, servicePrices, title = 'Financeiro
                                             </div>
                                         </div>
                                     </div>
-                                    <span className="text-sm font-bold text-emerald-600">+R$ {price}</span>
+                                    <span className="text-sm font-bold text-emerald-600">+R$ {formatMoney(price)}</span>
                                 </div>
                             )
                         })}

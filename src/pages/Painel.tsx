@@ -797,6 +797,7 @@ export function Painel() {
                             title={`Financeiro de ${currentStaff?.nome || 'Barbeiro'}`}
                             allAgendamentos={allAgendamentos}
                             servicePrices={servicePrices}
+                            revenueShare={currentStaff?.id === BARBEIROS[1].id ? 0.5 : 1}
                         />
                     )
                 ) : activeTab === 'clientes' ? (
