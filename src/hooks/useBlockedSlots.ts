@@ -1,6 +1,7 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { isTimeInRange, timeRangesOverlap } from '@/lib/time'
+import { addDaysToDateKey, getBarbershopDateKey, isTimeInRange, timeRangesOverlap } from '@/lib/time'
 
 export type BlockedSlot = {
     id: string
@@ -15,6 +16,26 @@ export type BlockedSlot = {
 export function useBlockedSlots(date?: string, barbeiroId?: string | null, multiBarberEnabled = true) {
     const queryClient = useQueryClient()
 
+    useEffect(() => {
+        if (!barbeiroId) return
+
+        const channel = supabase
+            .channel(`blocked-slots-${barbeiroId}-${date || 'todos'}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'blocked_slots',
+                    filter: `barbeiro_id=eq.${barbeiroId}`,
+                },
+                () => queryClient.invalidateQueries({ queryKey: ['blocked-slots'] }),
+            )
+            .subscribe()
+
+        return () => { supabase.removeChannel(channel) }
+    }, [barbeiroId, date, queryClient])
+
     const { data: blockedSlots = [], isLoading } = useQuery({
         queryKey: ['blocked-slots', date, barbeiroId, multiBarberEnabled],
         queryFn: async () => {
@@ -28,6 +49,9 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null, multi
 
             if (date) {
                 query = query.eq('data', date)
+            } else {
+                const today = getBarbershopDateKey(new Date())
+                query = query.gte('data', today).lte('data', addDaysToDateKey(today, 90))
             }
             if (multiBarberEnabled && barbeiroId) {
                 query = query.eq('barbeiro_id', barbeiroId)
@@ -38,6 +62,12 @@ export function useBlockedSlots(date?: string, barbeiroId?: string | null, multi
             return (data || []) as unknown as BlockedSlot[]
         },
         enabled: !!barbeiroId,
+        staleTime: 0,
+        refetchInterval: 1000 * 5,
+        refetchIntervalInBackground: true,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: 'always',
+        refetchOnReconnect: 'always',
     })
 
     const createBlock = useMutation({

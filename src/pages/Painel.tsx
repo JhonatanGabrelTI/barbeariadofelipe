@@ -769,7 +769,11 @@ export function Painel() {
                             </div>
                         )}
                         {managedStaffId && (
-                            <ControleHorarios barbeiroId={managedStaffId} barbeiroNome={managedStaff?.nome} />
+                            <ControleHorarios
+                                barbeiroId={managedStaffId}
+                                barbeiroNome={managedStaff?.nome}
+                                agendamentos={allAgendamentos}
+                            />
                         )}
                     </div>
                 ) : activeTab === 'servicos' ? (

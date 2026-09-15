@@ -5,6 +5,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import { useAgendamentos } from '@/hooks/useAgendamentos'
 import { useAgendamentosPublic } from '@/hooks/useAgendamentosPublic'
 import { useBlockedSlots } from '@/hooks/useBlockedSlots'
+import { useDisponibilidade } from '@/hooks/useDisponibilidade'
 import { useServicos } from '@/hooks/useServicos'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,6 +93,12 @@ export function Agendar() {
     } = useAgendamentosPublic(dateStr, selectedBarbeiro, multiBarberEnabled)
     const [selectedTime, setSelectedTime] = useState<string | null>(null)
     const [selectedService, setSelectedService] = useState<string | null>(null)
+    const selectedServiceData = services.find(s => s.id === selectedService)
+    const {
+        data: authoritativeAvailability,
+        isFetching: isFetchingAvailability,
+        refetch: refetchAvailability,
+    } = useDisponibilidade(dateStr, selectedServiceData?.name, selectedBarbeiro)
     const [whatsapp, setWhatsapp] = useState('')
     const [nomeCliente, setNomeCliente] = useState('')
     const [email, setEmail] = useState('')
@@ -211,6 +218,14 @@ export function Agendar() {
             if (latestAvailability.error) {
                 throw new Error('Não foi possível atualizar a agenda. Verifique sua internet e tente novamente.')
             }
+            const authoritativeResult = await refetchAvailability()
+            if (authoritativeResult.error) {
+                throw new Error('Não foi possível validar o horário. Verifique sua internet e tente novamente.')
+            }
+            const selectedAvailability = authoritativeResult.data?.find(item => item.horario === selectedTime)
+            if (selectedAvailability && !selectedAvailability.disponivel) {
+                throw new Error('Esse horário não está mais disponível. Escolha outro horário.')
+            }
 
             await createAgendamento.mutateAsync({
                 whatsapp,
@@ -244,9 +259,7 @@ export function Agendar() {
             bookingLock.current = false
             setIsBooking(false)
         }
-    }, [selectedDate, selectedTime, selectedService, selectedBarbeiro, whatsapp, nomeCliente, services, createAgendamento, refetchPublic])
-
-    const selectedServiceData = services.find(s => s.id === selectedService)
+    }, [selectedDate, selectedTime, selectedService, selectedBarbeiro, whatsapp, nomeCliente, services, createAgendamento, refetchPublic, refetchAvailability])
 
     // Returns the reason a slot is blocked, or null if it's free
     type BlockReason = 'blocked' | 'past' | 'occupied' | 'next-occupied' | 'exceeds-hours'
@@ -268,6 +281,15 @@ export function Agendar() {
     }, [publicAgendamentos])
 
     const getSlotBlockReason = useCallback((time: string): BlockReason | null => {
+        if (authoritativeAvailability) {
+            const result = authoritativeAvailability.find(item => item.horario === time)
+            if (result?.disponivel) return null
+            if (result?.motivo === 'passado') return 'past'
+            if (result?.motivo === 'sem_tempo') return 'exceeds-hours'
+            if (result?.motivo === 'bloqueado') return 'blocked'
+            if (result) return 'occupied'
+        }
+
         // 1. If date is today, check if time has already passed
         const now = new Date()
         const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null
@@ -313,7 +335,7 @@ export function Agendar() {
         }
 
         return null
-    }, [isIntervalBlocked, publicAgendamentos, selectedDate, selectedServiceData, isSlotDirectlyOccupied])
+    }, [authoritativeAvailability, isIntervalBlocked, publicAgendamentos, selectedDate, selectedServiceData, isSlotDirectlyOccupied])
 
     const today = startOfDay(new Date())
     const maxDate = addDays(today, 90)
@@ -644,7 +666,7 @@ export function Agendar() {
                                                 )}
                                             </div>
                                             {/* Syncing indicator */}
-                                            {isFetchingPublic && (
+                                            {(isFetchingPublic || isFetchingAvailability) && (
                                                 <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/50">
                                                     <RefreshCw className="w-3 h-3 animate-spin" />
                                                     <span className="font-medium">Sincronizando...</span>
@@ -655,7 +677,7 @@ export function Agendar() {
                                         {/* Bloqueio visual completo durante fetch para evitar cliques em slots desatualizados */}
                                         <div className={[
                                             'relative transition-opacity duration-200',
-                                            isFetchingPublic ? 'pointer-events-none opacity-60' : 'opacity-100'
+                                            (isFetchingPublic || isFetchingAvailability) ? 'pointer-events-none opacity-60' : 'opacity-100'
                                         ].join(' ')}>
                                             {timeSlots.length === 0 ? (
                                                 <div className="text-center py-12">
@@ -673,18 +695,21 @@ export function Agendar() {
                                                             const isBlocked = blockReason !== null
                                                             const isNextOccupied = blockReason === 'next-occupied'
                                                             const isExceedsHours = blockReason === 'exceeds-hours'
+                                                            const isPastSlot = blockReason === 'past'
                                                             const isSelected = selectedTime === time
 
                                                             return (
                                                                 <button
                                                                     key={time}
                                                                     onClick={() => !isBlocked && handleTimeSelect(time)}
-                                                                    disabled={isBlocked || isFetchingPublic}
+                                                                    disabled={isBlocked || isFetchingPublic || isFetchingAvailability}
                                                                     title={
                                                                         isNextOccupied
                                                                             ? `Seu serviço dura ${selectedServiceData?.duration}min e o próximo horário já está ocupado`
                                                                             : isExceedsHours
                                                                                 ? `O serviço passaria do horário de fechamento`
+                                                                                : isPastSlot
+                                                                                    ? 'Esse horário já passou'
                                                                                 : undefined
                                                                     }
                                                                     className={[
@@ -695,6 +720,8 @@ export function Agendar() {
                                                                                 ? 'border-amber-200 bg-amber-50 text-amber-500 cursor-not-allowed'
                                                                                 : isExceedsHours
                                                                                     ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                                                                                    : isPastSlot
+                                                                                        ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
                                                                                     : isBlocked
                                                                                         ? 'border-red-100 bg-red-50 text-red-300 cursor-not-allowed'
                                                                                         : 'border-gray-100 bg-white text-gray-700 hover:border-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-white hover:shadow-lg hover:shadow-emerald-500/10 hover:scale-105 hover:text-emerald-700 active:scale-95'
@@ -717,6 +744,11 @@ export function Agendar() {
                                                                         <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
                                                                             <Clock className="w-4 h-4 mb-0.5" />
                                                                             Sem tempo
+                                                                        </span>
+                                                                    ) : isPastSlot ? (
+                                                                        <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">
+                                                                            <Clock className="w-4 h-4 mb-0.5" />
+                                                                            Já passou
                                                                         </span>
                                                                     ) : isBlocked ? (
                                                                         <span className="flex flex-col items-center justify-center text-[10px] uppercase tracking-tighter">

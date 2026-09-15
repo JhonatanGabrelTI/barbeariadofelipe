@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import { format, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Lock, Unlock, Clock, CalendarOff, Ban } from 'lucide-react'
-import { isTimeInRange } from '@/lib/time'
+import { barbershopDateTimeToDate, getBarbershopDateKey, isTimeInRange } from '@/lib/time'
 
 const allTimeSlots = [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -25,7 +25,19 @@ const allTimeSlots = [
     '18:00', '18:30', '19:00', '19:30',
 ]
 
-export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: string; barbeiroNome?: string }) {
+type ControleHorariosProps = {
+    barbeiroId: string
+    barbeiroNome?: string
+    agendamentos?: Array<{
+        barbeiro_id: string
+        status: string
+        data_hora: string
+        duracao_minutos?: number
+        nome_cliente?: string | null
+    }>
+}
+
+export function ControleHorarios({ barbeiroId, barbeiroNome, agendamentos = [] }: ControleHorariosProps) {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const [showBlockDialog, setShowBlockDialog] = useState(false)
     const [horaInicio, setHoraInicio] = useState('')
@@ -48,6 +60,27 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
         return dates
     }, [allBlocked])
 
+    const agendamentosDoDia = useMemo(() => {
+        if (!dateStr) return []
+        return agendamentos.filter(agendamento => (
+            agendamento.barbeiro_id === barbeiroId
+            && agendamento.status !== 'cancelado'
+            && getBarbershopDateKey(agendamento.data_hora) === dateStr
+        ))
+    }, [agendamentos, barbeiroId, dateStr])
+
+    const getAppointmentForInterval = useCallback((startTime: string, endTime: string) => {
+        if (!dateStr) return undefined
+        const intervalStart = barbershopDateTimeToDate(dateStr, startTime).getTime()
+        const intervalEnd = barbershopDateTimeToDate(dateStr, endTime).getTime()
+
+        return agendamentosDoDia.find(agendamento => {
+            const appointmentStart = new Date(agendamento.data_hora).getTime()
+            const appointmentEnd = appointmentStart + (agendamento.duracao_minutos || 30) * 60_000
+            return intervalStart < appointmentEnd && intervalEnd > appointmentStart
+        })
+    }, [agendamentosDoDia, dateStr])
+
     const handleBlockSingle = useCallback(async (time: string) => {
         if (!dateStr) return
         setIsSubmitting(true)
@@ -57,11 +90,17 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
             const endMinutes = h * 60 + m + 30
             const endH = String(Math.floor(endMinutes / 60)).padStart(2, '0')
             const endM = String(endMinutes % 60).padStart(2, '0')
+            const endTime = `${endH}:${endM}`
+            const appointment = getAppointmentForInterval(time, endTime)
+            if (appointment) {
+                toast.error(`Esse intervalo já possui o cliente ${appointment.nome_cliente || 'agendado'}.`)
+                return
+            }
 
             await createBlock.mutateAsync({
                 data: dateStr,
                 hora_inicio: time,
-                hora_fim: `${endH}:${endM}`,
+                hora_fim: endTime,
                 motivo: 'Pausa',
                 barbeiro_id: barbeiroId,
             })
@@ -71,12 +110,17 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
         } finally {
             setIsSubmitting(false)
         }
-    }, [dateStr, barbeiroId, createBlock])
+    }, [dateStr, barbeiroId, createBlock, getAppointmentForInterval])
 
     const handleBlockRange = useCallback(async () => {
         if (!dateStr || !horaInicio || !horaFim) return
         if (horaInicio >= horaFim) {
             toast.error('O horário de início deve ser antes do fim.')
+            return
+        }
+        const appointment = getAppointmentForInterval(horaInicio, horaFim)
+        if (appointment) {
+            toast.error(`O intervalo inclui o cliente ${appointment.nome_cliente || 'agendado'}. Escolha outro horário.`)
             return
         }
         setIsSubmitting(true)
@@ -98,7 +142,7 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
         } finally {
             setIsSubmitting(false)
         }
-    }, [dateStr, horaInicio, horaFim, motivo, barbeiroId, createBlock])
+    }, [dateStr, horaInicio, horaFim, motivo, barbeiroId, createBlock, getAppointmentForInterval])
 
     const handleUnblock = useCallback(async (id: string) => {
         try {
@@ -158,6 +202,10 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
                             <div className="w-3 h-3 rounded bg-red-50 border border-red-200" />
                             <span>Dia com bloqueios</span>
                         </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded bg-blue-50 border border-blue-200" />
+                            <span>Cliente agendado</span>
+                        </div>
                     </div>
                 </div>
 
@@ -184,10 +232,28 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
                                 {allTimeSlots.map((time) => {
                                     const blocked = isSlotBlocked(time)
                                     const block = getBlockForSlot(time)
+                                    const [hours, minutes] = time.split(':').map(Number)
+                                    const endMinutes = hours * 60 + minutes + 30
+                                    const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`
+                                    const appointment = getAppointmentForInterval(time, endTime)
+                                    const past = !!dateStr && barbershopDateTimeToDate(dateStr, time) <= new Date()
 
                                     return (
                                         <div key={time} className="relative">
-                                            {blocked ? (
+                                            {appointment ? (
+                                                <div className="w-full h-14 rounded-xl border-2 border-blue-200 bg-blue-50 flex flex-col items-center justify-center px-1">
+                                                    <div className="flex items-center gap-1">
+                                                        <Clock className="w-3.5 h-3.5 text-blue-500" />
+                                                        <span className="text-sm font-bold text-blue-600">{time}</span>
+                                                    </div>
+                                                    <span
+                                                        className="w-full truncate text-center text-[10px] text-blue-500"
+                                                        title={appointment.nome_cliente || 'Cliente agendado'}
+                                                    >
+                                                        {appointment.nome_cliente || 'Cliente agendado'}
+                                                    </span>
+                                                </div>
+                                            ) : blocked ? (
                                                 <button
                                                     onClick={() => block && handleUnblock(block.id)}
                                                     disabled={deleteBlock.isPending}
@@ -203,6 +269,14 @@ export function ControleHorarios({ barbeiroId, barbeiroNome }: { barbeiroId: str
                                                         Desbloquear
                                                     </span>
                                                 </button>
+                                            ) : past ? (
+                                                <div className="w-full h-14 rounded-xl border-2 border-gray-200 bg-gray-50 flex flex-col items-center justify-center">
+                                                    <div className="flex items-center gap-1">
+                                                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                                        <span className="text-sm font-bold text-gray-400">{time}</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-400">Já passou</span>
+                                                </div>
                                             ) : (
                                                 <button
                                                     onClick={() => handleBlockSingle(time)}

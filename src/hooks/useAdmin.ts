@@ -23,6 +23,15 @@ function isMissingBarbeirosTable(code?: string) {
 const APPOINTMENTS_PAGE_SIZE = 500
 
 async function fetchAllAppointments(currentStaff: StaffMember | null, isOwner: boolean) {
+    const snapshot = await supabase.rpc('listar_agendamentos_painel')
+    if (!snapshot.error && Array.isArray(snapshot.data)) {
+        return snapshot.data as Agendamento[]
+    }
+    if (snapshot.error && snapshot.error.code !== 'PGRST202' && snapshot.error.code !== '42883') {
+        throw snapshot.error
+    }
+
+    // Compatibilidade temporária enquanto a função nova ainda não foi aplicada.
     const appointments: Agendamento[] = []
 
     for (let from = 0; ; from += APPOINTMENTS_PAGE_SIZE) {
@@ -131,6 +140,9 @@ export function useAdmin() {
         refetchOnMount: 'always',
         refetchOnWindowFocus: 'always',
         refetchOnReconnect: 'always',
+        placeholderData: previous => previous,
+        retry: 3,
+        retryDelay: attempt => Math.min(1000 * 2 ** attempt, 8000),
     })
 
     useEffect(() => {
