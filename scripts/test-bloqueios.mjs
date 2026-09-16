@@ -35,6 +35,7 @@ for (let daysAhead = 80; daysAhead <= 84; daysAhead += 1) {
 if (!testDate) throw new Error('Nenhum dia vazio foi encontrado para o teste.')
 
 let blockId
+let directBlockId
 let appointmentId
 try {
     const { data: created, error: createError } = await supabase.rpc('criar_bloqueio_horario', {
@@ -57,6 +58,22 @@ try {
     })
     if (overlapError) throw overlapError
     if (overlap?.success) throw new Error('Um bloqueio sobreposto foi aceito.')
+
+    // Simula uma gravação direta, sem passar pela função usada pelo painel.
+    // O gatilho do banco deve manter a mesma proteção para qualquer integração.
+    const { data: directOverlap, error: directOverlapError } = await supabase
+        .from('blocked_slots')
+        .insert({
+            data: testDate,
+            hora_inicio: '10:30',
+            hora_fim: '11:30',
+            motivo: 'TESTE DIRETO SOBREPOSTO',
+            barbeiro_id: barbeiroId,
+        })
+        .select('id')
+        .maybeSingle()
+    directBlockId = directOverlap?.id
+    if (!directOverlapError) throw new Error('Uma gravação direta criou um bloqueio sobreposto.')
 
     const book = async (time, phone) => {
         const { data, error } = await supabase.rpc('agendar_horario_com_barbeiro', {
@@ -83,12 +100,17 @@ try {
         success: true,
         exactStartRecognized: true,
         overlappingBlockRefused: true,
+        directWriteOverlapRefused: true,
         appointmentInsideRefused: true,
         adjacentAppointmentAccepted: true,
     }, null, 2))
 } finally {
     if (appointmentId) {
         const { error } = await supabase.from('agendamentos').update({ status: 'cancelado' }).eq('id', appointmentId)
+        if (error) throw error
+    }
+    if (directBlockId) {
+        const { error } = await supabase.from('blocked_slots').delete().eq('id', directBlockId)
         if (error) throw error
     }
     if (blockId) {
