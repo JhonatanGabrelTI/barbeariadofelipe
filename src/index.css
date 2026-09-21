@@ -1004,15 +1004,10 @@
 .professional-soon-carousel {
   display: inline-flex;
   width: max-content;
-  animation: professional-soon-carousel 9s linear infinite;
+  will-change: transform;
+  animation: professional-soon-carousel 4s linear infinite !important;
 }
 
 .professional-soon-carousel span {
   display: inline-block;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .professional-soon-carousel {
-    animation: none;
-  }
 }
