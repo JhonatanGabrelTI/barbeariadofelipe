@@ -21,7 +21,7 @@ import {
 import { toast } from 'sonner'
 import { format, addDays, addMinutes, isBefore, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info, Phone, RefreshCw, Sparkles, ChevronRight, Shield } from 'lucide-react'
+import { Scissors, Clock, CheckCircle, CalendarOff, Ban, Mail, AlertTriangle, Info, Phone, RefreshCw, Sparkles, ChevronRight, Shield, UserPlus } from 'lucide-react'
 import { IS_SAO_JOAO, IS_COPA } from '../config'
 import { BARBEIROS, getBarbeiro } from '@/data/barbeiros'
 import { barbershopDateTimeToDate, formatBarbershopDateTime, getBarbershopDateKey } from '@/lib/time'
@@ -574,7 +574,7 @@ export function Agendar() {
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
                             {BARBEIROS.map((barbeiro, idx) => (
                                 <button
                                     key={barbeiro.id}
@@ -605,6 +605,35 @@ export function Agendar() {
                                     </div>
                                 </button>
                             ))}
+
+                            <div
+                                className="rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 overflow-hidden animate-fade-in-up"
+                                style={{ animationDelay: `${BARBEIROS.length * 80}ms` }}
+                                aria-label="Novo barbeiro em breve"
+                            >
+                                <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-600 flex items-center justify-center">
+                                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-emerald-300/20 blur-2xl" />
+                                    <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                                    <div className="relative z-10 h-20 w-20 rounded-3xl border border-white/25 bg-white/10 backdrop-blur-sm flex items-center justify-center text-white shadow-xl">
+                                        <UserPlus className="w-9 h-9" />
+                                    </div>
+                                    <div className="absolute inset-x-0 bottom-6 overflow-hidden border-y border-white/20 bg-emerald-950/35 py-2 backdrop-blur-sm">
+                                        <div className="professional-soon-carousel whitespace-nowrap text-xs font-black tracking-[0.22em] text-emerald-100">
+                                            <span>EM BREVE! &nbsp;•&nbsp; EM BREVE! &nbsp;•&nbsp; EM BREVE! &nbsp;•&nbsp; </span>
+                                            <span aria-hidden="true">EM BREVE! &nbsp;•&nbsp; EM BREVE! &nbsp;•&nbsp; EM BREVE! &nbsp;•&nbsp; </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-5 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-500 mb-1">Novo barbeiro</p>
+                                        <h3 className="text-xl font-black text-gray-900">Em breve!</h3>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                        <Sparkles className="w-5 h-5" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
