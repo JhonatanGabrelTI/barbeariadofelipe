@@ -49,6 +49,7 @@ import {
     Search,
     UserX,
     Download,
+    ArrowLeft,
 } from 'lucide-react'
 
 type FilterStatus = 'todos' | 'confirmado' | 'cancelado' | 'realizado'
@@ -134,6 +135,7 @@ export function Painel() {
     const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('hoje')
     const [activeTab, setActiveTab] = useState<Tab>('agendamentos')
     const [showHistoryModal, setShowHistoryModal] = useState(false)
+    const [selectedHistoryMonth, setSelectedHistoryMonth] = useState('')
     const [isExportingBackup, setIsExportingBackup] = useState(false)
     const [selectedStaffId, setSelectedStaffId] = useState('')
     const managedStaffId = isOwner ? (selectedStaffId || currentStaff?.id || '') : (currentStaff?.id || '')
@@ -240,11 +242,9 @@ export function Painel() {
     const availableMonths = useMemo(() => {
         const months = new Set<string>()
         allAgendamentos.forEach(a => {
-            const d = new Date(a.data_hora)
-            const monthStr = format(d, 'yyyy-MM')
-            months.add(monthStr)
+            months.add(getBarbershopDateKey(a.data_hora).slice(0, 7))
         })
-        const currentMonth = format(new Date(), 'yyyy-MM')
+        const currentMonth = getBarbershopDateKey(new Date()).slice(0, 7)
         months.add(currentMonth)
         return Array.from(months).sort().reverse()
     }, [allAgendamentos])
@@ -283,21 +283,50 @@ export function Painel() {
     // Historico mensal
     const historyByMonth = useMemo(() => {
         return availableMonths.map(m => {
-            const [year, month] = m.split('-').map(Number)
-            const startOfSelectedMonth = new Date(year, month - 1, 1)
-            const endOfSelectedMonth = new Date(year, month, 0, 23, 59, 59, 999)
-            
             const revenue = allAgendamentos
-                .filter(a => a.status === 'confirmado' || a.status === 'realizado')
-                .filter(a => {
-                    const d = new Date(a.data_hora)
-                    return d >= startOfSelectedMonth && d <= endOfSelectedMonth
-                })
+                .filter(a => (a.status === 'confirmado' || a.status === 'realizado') && getBarbershopDateKey(a.data_hora).startsWith(m))
                 .reduce((acc, a) => acc + (servicePrices[a.servico] || 0), 0)
                 
-            return { month: m, revenue }
+            const count = allAgendamentos.filter(a =>
+                (a.status === 'confirmado' || a.status === 'realizado') && getBarbershopDateKey(a.data_hora).startsWith(m),
+            ).length
+
+            return { month: m, revenue, count }
         })
     }, [availableMonths, allAgendamentos, servicePrices])
+
+    const activeHistoryMonth = selectedHistoryMonth || availableMonths[0] || ''
+    const historyByDay = useMemo(() => {
+        if (!activeHistoryMonth) return []
+
+        const days = new Map<string, { revenue: number; count: number; byStaff: Map<string, { name: string; revenue: number; count: number }> }>()
+        allAgendamentos
+            .filter(a => (a.status === 'confirmado' || a.status === 'realizado') && getBarbershopDateKey(a.data_hora).startsWith(activeHistoryMonth))
+            .forEach(a => {
+                const day = getBarbershopDateKey(a.data_hora)
+                const price = servicePrices[a.servico] || 0
+                const staff = staffMembers.find(member => member.id === a.barbeiro_id)
+                const staffName = staff?.nome || getBarbeiro(a.barbeiro_id)?.nome || 'Barbeiro'
+                const currentDay = days.get(day) || { revenue: 0, count: 0, byStaff: new Map() }
+                const currentStaff = currentDay.byStaff.get(a.barbeiro_id) || { name: staffName, revenue: 0, count: 0 }
+
+                currentDay.revenue += price
+                currentDay.count += 1
+                currentStaff.revenue += price
+                currentStaff.count += 1
+                currentDay.byStaff.set(a.barbeiro_id, currentStaff)
+                days.set(day, currentDay)
+            })
+
+        return Array.from(days.entries())
+            .sort(([dayA], [dayB]) => dayB.localeCompare(dayA))
+            .map(([day, data]) => ({ day, ...data, byStaff: Array.from(data.byStaff.values()).sort((a, b) => b.revenue - a.revenue) }))
+    }, [activeHistoryMonth, allAgendamentos, servicePrices, staffMembers])
+
+    const formatCurrency = (value: number) => value.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })
 
     const handleUpdateStatus = async (id: string, status: string) => {
         if (isPreview) {
@@ -1303,29 +1332,75 @@ export function Painel() {
 
             {/* Modal de Histórico de Ganhos Previstos */}
             <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
-                <DialogContent className="sm:max-w-md rounded-2xl bg-white border border-gray-100">
+                <DialogContent className="sm:max-w-2xl rounded-2xl bg-white border border-gray-100">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-emerald-600">
+                            {selectedHistoryMonth && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedHistoryMonth('')}
+                                    className="p-1 rounded-lg hover:bg-emerald-50"
+                                    aria-label="Voltar para os meses"
+                                >
+                                    <ArrowLeft className="w-5 h-5" />
+                                </button>
+                            )}
                             <DollarSign className="w-5 h-5" />
-                            Histórico de Ganhos Previstos
+                            {selectedHistoryMonth ? 'Histórico diário' : 'Histórico de Ganhos Previstos'}
                         </DialogTitle>
                         <DialogDescription>
-                            Ganhos previstos contabilizados a partir do dia 2 de cada mês.
+                            {selectedHistoryMonth
+                                ? 'Veja o valor de cada dia e a divisão por barbeiro.'
+                                : 'Escolha um mês para ver os valores de cada dia.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-72 overflow-y-auto pr-2 space-y-2 mt-2">
-                        {historyByMonth.map(item => {
-                            const [y, mo] = item.month.split('-')
-                            const date = new Date(Number(y), Number(mo) - 1)
-                            const monthName = format(date, 'MMMM yyyy', { locale: ptBR })
-                            return (
-                                <div key={item.month} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                                    <span className="text-sm font-semibold text-gray-700 capitalize">{monthName}</span>
-                                    <span className="text-sm font-bold text-emerald-600">R$ {item.revenue}</span>
+                    {!selectedHistoryMonth ? (
+                        <div className="max-h-72 overflow-y-auto pr-2 space-y-2 mt-2">
+                            {historyByMonth.map(item => {
+                                const [y, mo] = item.month.split('-')
+                                const date = new Date(Number(y), Number(mo) - 1)
+                                const monthName = format(date, 'MMMM yyyy', { locale: ptBR })
+                                return (
+                                    <button
+                                        type="button"
+                                        key={item.month}
+                                        onClick={() => setSelectedHistoryMonth(item.month)}
+                                        className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <span>
+                                            <span className="block text-sm font-semibold text-gray-700 capitalize">{monthName}</span>
+                                            <span className="block text-xs text-gray-400">{item.count} atendimento(s)</span>
+                                        </span>
+                                        <span className="text-sm font-bold text-emerald-600">R$ {formatCurrency(item.revenue)}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <div className="max-h-[28rem] overflow-y-auto pr-2 space-y-3 mt-2">
+                            {historyByDay.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400 py-8">Nenhum atendimento previsto neste mês.</p>
+                            ) : historyByDay.map(item => (
+                                <div key={item.day} className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-800">{format(new Date(`${item.day}T12:00:00`), "dd 'de' MMMM", { locale: ptBR })}</p>
+                                            <p className="text-xs text-gray-400">{item.count} atendimento(s)</p>
+                                        </div>
+                                        <span className="text-base font-black text-emerald-600">R$ {formatCurrency(item.revenue)}</span>
+                                    </div>
+                                    <div className="space-y-2 border-t border-gray-200/70 pt-3">
+                                        {item.byStaff.map(staff => (
+                                            <div key={staff.name} className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">{staff.name} <span className="text-xs text-gray-400">({staff.count}x)</span></span>
+                                                <span className="font-bold text-gray-700">R$ {formatCurrency(staff.revenue)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            )
-                        })}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                     <div className="flex justify-end mt-4">
                         <Button
                             variant="outline"
